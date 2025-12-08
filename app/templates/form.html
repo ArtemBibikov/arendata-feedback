@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+        <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #ffffff;
+            min-height: 100vh;
+            color: #2c3e50;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        .header {
+            background: white;
+            color: #2c3e50;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        
+        .progress-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            animation: progress 2s ease-out;
+            width: 100%;
+        }
+        
+        @keyframes progress {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+        
+        .loading-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: white;
+        }
+        
+        .logo {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            letter-spacing: -1px;
+        }
+        
+        .logo::after {
+            content: " | Обратная связь";
+            font-size: 18px;
+            font-weight: normal;
+            color: #7f8c8d;
+            margin-left: 8px;
+        }
+        
+        .loading-spinner {
+            border: 3px solid #ecf0f1;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        .emoji-option {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .emoji-option:hover {
+            border-color: #3498db;
+            background: #f8f9fa;
+        }
+        
+        .emoji-option.selected {
+            border-color: #3498db;
+            background: #e3f2fd;
+        }
+        
+        .emoji-option input[type="radio"] {
+            margin-right: 12px;
+        }
+        
+        .emoji {
+            font-size: 20px;
+            margin-right: 8px;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+        
+        .header .subtitle {
+            font-size: 16px;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+        
+        .divider {
+            height: 1px;
+            background: #ecf0f1;
+            margin: 20px 0;
+        }
+        
+        .form-container {
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+        }
+        
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ecf0f1;
+            display: flex;
+            align-items: center;
+        }
+        
+        .section-title .number {
+            background: #3498db;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            margin-right: 8px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #34495e;
+        }
+        
+        .required::after {
+            content: " *";
+            color: #e74c3c;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #ffffff;
+        }
+        
+        .form-control::placeholder {
+            color: #95a5a6;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        
+        textarea.form-control {
+            resize: vertical;
+            min-height: 120px;
+            font-family: inherit;
+        }
+        
+        .help-text {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        
+        .file-input-container {
+            margin-top: 8px;
+        }
+        
+        .file-input-container input[type="file"] {
+            display: none;
+        }
+        
+        .file-info {
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        
+        .file-info:hover {
+            border-color: #3498db;
+            background: #e3f2fd;
+            color: #3498db;
+        }
+        
+        .file-input-container input[type="file"]:focus + .file-info {
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(52, 152, 219, 0.3);
+        }
+        
+        .btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .spinner {
+            border: 4px solid #ecf0f1;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .success {
+            display: none;
+            text-align: center;
+            padding: 60px 40px;
+        }
+        
+        .success-icon {
+            font-size: 80px;
+            color: #27ae60;
+            margin-bottom: 30px;
+            animation: scaleIn 0.5s ease-out;
+        }
+        
+        @keyframes scaleIn {
+            0% { transform: scale(0); }
+            100% { transform: scale(1); }
+        }
+        
+        .ticket-number {
+            background: #f8f9fa;
+            border: 2px solid #27ae60;
+            border-radius: 8px;
+            padding: 12px 20px;
+            display: inline-block;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 18px;
+            font-weight: bold;
+            color: #27ae60;
+        }
+        
+        .return-btn {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .return-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(39, 174, 96, 0.3);
+        }
+        
+        .error {
+            display: none;
+            background: #e74c3c;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 8px;
+            }
+            
+            .form-container {
+                padding: 20px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{{ title }}</h1>
+            <p>Ваше мнение важно для нас</p>
+        </div>
+        
+        <div class="form-container">
+            <div id="error" class="error"></div>
+            
+            <form id="feedbackForm">
+                <!-- Поля формы будут добавлены динамически -->
+            </form>
+            
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>Отправка...</p>
+            </div>
+            
+            <div id="success" class="success">
+                <div class="success-icon">✓</div>
+                <h2>Спасибо за ваш отзыв!</h2>
+                <p>Мы получили ваше обращение и обязательно его рассмотрим.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const FORM_TYPE = "{{ form_type }}";
+        const API_BASE = "/api";
+        
+        // Загрузка конфигурации формы
+        async function loadFormConfig() {
+            try {
+                const response = await fetch(`${API_BASE}/forms/${FORM_TYPE}/preview`);
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error("Не удалось загрузить конфигурацию формы");
+                }
+                
+                const config = await response.json();
+                console.log('Form config:', config);
+                console.log('Fields count:', config.fields?.length || 0);
+                renderForm(config);
+            } catch (error) {
+                console.error('Error loading form config:', error);
+                showError(error.message);
+            }
+        }
+        
+        // Рендеринг формы
+        function renderForm(config) {
+            console.log('renderForm called with:', config);
+            const form = document.getElementById("feedbackForm");
+            form.innerHTML = "";
+            
+            // Добавляем скрытые поля
+            const formTypeInput = createInput("hidden", "form_type", FORM_TYPE);
+            form.appendChild(formTypeInput);
+            
+            // Работаем с секциями из API
+            if (config.sections && Object.keys(config.sections).length > 0) {
+                console.log('Sections from API:', Object.keys(config.sections));
+                
+                // Рендерим секции
+                Object.entries(config.sections).forEach(([sectionName, fields]) => {
+                    console.log('Rendering section:', sectionName, 'with fields:', fields.length);
+                    
+                    // fields уже массив, передаем напрямую
+                    const section = createSection(sectionName, fields);
+                    form.appendChild(section);
+                });
+            } else {
+                console.error('No sections in config:', config);
+                return;
+            }
+            
+            // Добавляем кнопку отправки
+            const submitBtn = document.createElement("button");
+            submitBtn.type = "submit";
+            submitBtn.className = "btn";
+            submitBtn.textContent = "Отправить отзыв";
+            form.appendChild(submitBtn);
+            
+            // Добавляем обработчик отправки
+            form.addEventListener("submit", handleSubmit);
+        }
+        
+        // Создание секции
+        function createSection(title, fields) {
+            const section = document.createElement("div");
+            section.className = "section";
+            
+            const sectionTitle = document.createElement("h3");
+            sectionTitle.className = "section-title";
+            sectionTitle.textContent = title;
+            section.appendChild(sectionTitle);
+            
+            fields.forEach(field => {
+                const formGroup = createFormGroup(field);
+                section.appendChild(formGroup);
+            });
+            
+            return section;
+        }
+        
+        // Создание группы полей
+        function createFormGroup(field) {
+            const group = document.createElement("div");
+            group.className = "form-group";
+            
+            const label = document.createElement("label");
+            label.className = `form-label ${field.required ? "required" : ""}`;
+            label.textContent = field.label;
+            label.setAttribute("for", field.name);
+            group.appendChild(label);
+            
+            const input = createField(field);
+            group.appendChild(input);
+            
+            if (field.help_text) {
+                const helpText = document.createElement("div");
+                helpText.className = "help-text";
+                helpText.textContent = field.help_text;
+                group.appendChild(helpText);
+            }
+            
+            return group;
+        }
+        
+        // Создание поля ввода
+        function createField(field) {
+            switch (field.type) {
+                case "textarea":
+                    return createTextarea(field);
+                case "select":
+                    return createSelect(field);
+                case "radio":
+                    return createRadioGroup(field);
+                case "checkbox":
+                    return createCheckbox(field);
+                case "email":
+                    return createInput("email", field.name, field.placeholder, field.required);
+                case "file":
+                    return createFileInput(field);
+                default:
+                    return createInput("text", field.name, field.placeholder, field.required);
+            }
+        }
+        
+        // Создание текстового поля
+        function createInput(type, name, placeholder, required = false) {
+            const input = document.createElement("input");
+            input.type = type;
+            input.name = name;
+            input.id = name;
+            input.className = "form-control";
+            input.placeholder = placeholder || "";
+            input.required = required;
+            
+            // Добавляем очистку ошибок для всех полей
+            input.addEventListener("input", function() {
+                clearFieldError(this);
+            });
+            
+            return input;
+        }
+        
+        // Создание textarea
+        function createTextarea(field) {
+            const textarea = document.createElement("textarea");
+            textarea.name = field.name;
+            textarea.id = field.name;
+            textarea.className = "form-control";
+            textarea.placeholder = field.placeholder || "";
+            textarea.required = field.required;
+            
+            // Добавляем очистку ошибок
+            textarea.addEventListener("input", function() {
+                clearFieldError(this);
+            });
+            
+            return textarea;
+        }
+        
+        // Создание поля для файлов
+        function createFileInput(field) {
+            const container = document.createElement("div");
+            container.className = "file-input-container";
+            
+            const input = document.createElement("input");
+            input.type = "file";
+            input.name = field.name;
+            input.id = field.name;
+            input.className = "form-control";
+            input.required = field.required;
+            
+            // Поддержка множественных файлов
+            if (field.options && field.options.multiple) {
+                input.multiple = true;
+            }
+            
+            // Ограничение типов файлов
+            if (field.options && field.options.accept) {
+                input.accept = field.options.accept;
+            }
+            
+            const fileInfo = document.createElement("div");
+            fileInfo.className = "file-info";
+            fileInfo.textContent = "Выберите файлы...";
+            
+            // Клик по fileInfo открывает файловый диалог
+            fileInfo.addEventListener("click", function() {
+                input.click();
+            });
+            
+            input.addEventListener("change", function(e) {
+                const files = Array.from(e.target.files);
+                if (files.length > 0) {
+                    const fileNames = files.map(f => f.name).join(", ");
+                    const totalSize = files.reduce((sum, f) => sum + f.size, 0);
+                    const sizeText = totalSize > 1024*1024 ? 
+                        `${(totalSize/1024/1024).toFixed(1)} MB` : 
+                        `${(totalSize/1024).toFixed(1)} KB`;
+                    fileInfo.textContent = `${files.length} файл(ов): ${fileNames} (${sizeText})`;
+                } else {
+                    fileInfo.textContent = "Выберите файлы...";
+                }
+            });
+            
+            container.appendChild(input);
+            container.appendChild(fileInfo);
+            
+            return container;
+        }
+        
+        // Создание select
+        function createSelect(field) {
+            const select = document.createElement("select");
+            select.name = field.name;
+            select.id = field.name;
+            select.className = "form-control";
+            select.required = field.required;
+            
+            // Добавляем пустой вариант
+            const defaultOption = document.createElement("option");
+            defaultOption.value = "";
+            defaultOption.textContent = "Выберите...";
+            select.appendChild(defaultOption);
+            
+            // Добавляем опции
+            if (field.options && field.options.choices) {
+                field.options.choices.forEach(option => {
+                    const optionElement = document.createElement("option");
+                    optionElement.value = option;
+                    optionElement.textContent = option;
+                    select.appendChild(optionElement);
+                });
+            }
+            
+            return select;
+        }
+        
+        // Создание группы radio кнопок
+        function createRadioGroup(field) {
+            const group = document.createElement("div");
+            
+            if (field.options) {
+                field.options.forEach(option => {
+                    const radioWrapper = document.createElement("div");
+                    radioWrapper.style.marginBottom = "10px";
+                    
+                    const radio = document.createElement("input");
+                    radio.type = "radio";
+                    radio.name = field.name;
+                    radio.id = `${field.name}_${option}`;
+                    radio.value = option;
+                    radio.required = field.required;
+                    
+                    const label = document.createElement("label");
+                    label.setAttribute("for", radio.id);
+                    label.style.marginLeft = "8px";
+                    label.textContent = option;
+                    
+                    radioWrapper.appendChild(radio);
+                    radioWrapper.appendChild(label);
+                    group.appendChild(radioWrapper);
+                });
+            }
+            
+            return group;
+        }
+        
+        // Создание checkbox
+        function createCheckbox(field) {
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.name = field.name;
+            checkbox.id = field.name;
+            checkbox.value = "true";
+            return checkbox;
+        }
+        
+        // Валидация email
+        function validateEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+        
+        // Показать ошибку для поля
+        function showFieldError(input, message) {
+            input.style.borderColor = '#e74c3c';
+            input.style.boxShadow = '0 0 0 3px rgba(231, 76, 60, 0.1)';
+            
+            let errorDiv = input.parentNode.querySelector('.field-error');
+            if (!errorDiv) {
+                errorDiv = document.createElement('div');
+                errorDiv.className = 'field-error';
+                errorDiv.style.color = '#e74c3c';
+                errorDiv.style.fontSize = '14px';
+                errorDiv.style.marginTop = '5px';
+                input.parentNode.appendChild(errorDiv);
+            }
+            errorDiv.textContent = message;
+            input.focus();
+        }
+        
+        // Убрать ошибку с поля
+        function clearFieldError(input) {
+            input.style.borderColor = '';
+            input.style.boxShadow = '';
+            let errorDiv = input.parentNode.querySelector('.field-error');
+            if (errorDiv) {
+                errorDiv.remove();
+            }
+        }
+        
+        // Валидация формы
+        function validateForm(form) {
+            let isValid = true;
+            let firstInvalidField = null;
+            
+            // Проверяем все обязательные поля
+            const requiredInputs = form.querySelectorAll('input[required], textarea[required], select[required]');
+            for (let input of requiredInputs) {
+                if (!input.value.trim()) {
+                    const fieldName = input.previousElementSibling?.textContent.replace(' *', '') || 'Поле';
+                    showFieldError(input, `${fieldName} обязательно для заполнения`);
+                    if (!firstInvalidField) firstInvalidField = input;
+                    isValid = false;
+                } else {
+                    clearFieldError(input);
+                }
+            }
+            
+            // Валидация email полей
+            const emailInputs = form.querySelectorAll('input[type="email"]');
+            for (let emailInput of emailInputs) {
+                if (emailInput.value && !validateEmail(emailInput.value)) {
+                    showFieldError(emailInput, 'Введите корректный email адрес');
+                    if (!firstInvalidField) firstInvalidField = emailInput;
+                    isValid = false;
+                } else if (emailInput.value) {
+                    clearFieldError(emailInput);
+                }
+            }
+            
+            // Валидация минимальной длины для текстовых полей
+            const textInputs = form.querySelectorAll('input[type="text"]');
+            for (let input of textInputs) {
+                if (input.value && input.value.length < 2) {
+                    showFieldError(input, 'Минимум 2 символа');
+                    if (!firstInvalidField) firstInvalidField = input;
+                    isValid = false;
+                } else if (input.value) {
+                    clearFieldError(input);
+                }
+            }
+            
+            // Валидация textarea
+            const textareas = form.querySelectorAll('textarea');
+            for (let textarea of textareas) {
+                if (textarea.value && textarea.value.length < 10) {
+                    showFieldError(textarea, 'Минимум 10 символов');
+                    if (!firstInvalidField) firstInvalidField = textarea;
+                    isValid = false;
+                } else if (textarea.value) {
+                    clearFieldError(textarea);
+                }
+            }
+            
+            // Фокус на первое невалидное поле
+            if (firstInvalidField) {
+                firstInvalidField.focus();
+            }
+            
+            return isValid;
+        }
+        
+        // Обработка отправки формы
+        async function handleSubmit(event) {
+            event.preventDefault();
+            
+            const form = event.target;
+            
+            // Валидация всей формы
+            if (!validateForm(form)) {
+                return; // Если форма невалидна, не отправляем
+            }
+            
+            const formData = new FormData(form);
+            
+            // Проверяем есть ли файлы в форме
+            const fileInputs = form.querySelectorAll('input[type="file"]');
+            const hasFiles = Array.from(fileInputs).some(input => input.files.length > 0);
+            
+            if (hasFiles) {
+                // Если есть файлы, отправляем как FormData
+                const submitData = new FormData();
+                
+                // Добавляем все поля кроме файлов
+                for (let [key, value] of formData.entries()) {
+                    if (!fileInputs[0] || key !== fileInputs[0].name) {
+                        submitData.append(key, value);
+                    }
+                }
+                
+                // Добавляем файлы
+                fileInputs.forEach(input => {
+                    if (input.files.length > 0) {
+                        Array.from(input.files).forEach(file => {
+                            submitData.append('attachments', file);
+                        });
+                    }
+                });
+                
+                // Добавляем обязательные поля
+                submitData.append('form_type', FORM_TYPE);
+                submitData.append('form_data', JSON.stringify({
+                    timestamp: new Date().toISOString(),
+                    form_version: "1.0"
+                }));
+                
+                await submitFormData(submitData);
+            } else {
+                // Если файлов нет, отправляем как JSON
+                const data = {};
+                for (let [key, value] of formData.entries()) {
+                    data[key] = value;
+                }
+                
+                data.form_type = FORM_TYPE;
+                data.form_data = {
+                    timestamp: new Date().toISOString(),
+                    form_version: "1.0"
+                };
+                
+                await submitJSON(data);
+            }
+        }
+        
+        // Отправка FormData с файлами
+        async function submitFormData(formData) {
+            showLoading();
+            hideError();
+            
+            try {
+                const response = await fetch(`${API_BASE}/feedback`, {
+                    method: "POST",
+                    body: formData  // Не устанавливаем Content-Type, браузер сделает это автоматически
+                });
+                
+                if (!response.ok) {
+                    throw new Error("Ошибка при отправке отзыва");
+                }
+                
+                showSuccess();
+            } catch (error) {
+                showError(error.message);
+                hideLoading();
+            }
+        }
+        
+        // Отправка JSON без файлов
+        async function submitJSON(data) {
+            showLoading();
+            hideError();
+            
+            try {
+                const response = await fetch(`${API_BASE}/feedback`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!response.ok) {
+                    throw new Error("Ошибка при отправке отзыва");
+                }
+                
+                showSuccess();
+            } catch (error) {
+                showError(error.message);
+                hideLoading();
+            }
+        }
+        
+        // Показать загрузку
+        function showLoading() {
+            document.getElementById("feedbackForm").style.display = "none";
+            document.getElementById("loading").style.display = "block";
+        }
+        
+        // Скрыть загрузку
+        function hideLoading() {
+            document.getElementById("loading").style.display = "none";
+            document.getElementById("feedbackForm").style.display = "block";
+        }
+        
+        // Показать успех
+        function showSuccess() {
+            document.getElementById("loading").style.display = "none";
+            document.getElementById("success").style.display = "block";
+        }
+        
+        // Показать ошибку
+        function showError(message) {
+            const errorElement = document.getElementById("error");
+            errorElement.textContent = message;
+            errorElement.style.display = "block";
+        }
+        
+        // Скрыть ошибку
+        function hideError() {
+            document.getElementById("error").style.display = "none";
+        }
+        
+        // Инициализация
+        document.addEventListener("DOMContentLoaded", loadFormConfig);
+    </script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+version: "3.8"
+
+services:
+  # PostgreSQL база данных
+  postgres:
+    image: postgres:16-alpine
+    container_name: arenadata_postgres
+    environment:
+      POSTGRES_DB: arenadata_feedback
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_password_123
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=ru_RU.UTF-8"
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./01_create_database.sql:/docker-entrypoint-initdb.d/01_create_database.sql
+      - ./02_create_user.sql:/docker-entrypoint-initdb.d/02_create_user.sql
+      - ./03_create_tables.sql:/docker-entrypoint-initdb.d/03_create_tables.sql
+      - ./04_initial_data.sql:/docker-entrypoint-initdb.d/04_initial_data.sql
+      - ./05_views_and_materialized.sql:/docker-entrypoint-initdb.d/05_views_and_materialized.sql
+    networks:
+      - arenadata_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d arenadata_feedback"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Adminer - SQL Admin интерфейс
+  adminer:
+    image: adminer:4.8.1
+    container_name: arenadata_adminer
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+      ADMINER_DESIGN: pepa-linha-dark
+    networks:
+      - arenadata_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - ./adminer_plugins:/plugins
+
+  # FastAPI приложение
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: arenadata_api
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres_password_123@postgres:5432/arenadata_feedback
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      FROM_EMAIL: ${FROM_EMAIL}
+    networks:
+      - arenadata_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - ./app:/app/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Redis для кэширования (опционально)
+  redis:
+    image: redis:7-alpine
+    container_name: arenadata_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - arenadata_network
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  arenadata_network:
+    driver: bridge

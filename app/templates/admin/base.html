@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Arenadata Admin{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* Привлекательные эффекты */
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .nav-item {
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        .nav-item::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: white;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+        .nav-item:hover::after {
+            width: 100%;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .shimmer {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        
+        .pulse-number {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- Навигация -->
+    <nav class="bg-blue-600 text-white shadow-lg shimmer">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <i class="fas fa-chart-line mr-3"></i>
+                    <span class="font-bold text-xl">Arenadata Admin</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/admin" class="nav-item hover:bg-blue-700 px-3 py-2 rounded">
+                        <i class="fas fa-tachometer-alt mr-1"></i> Дашборд
+                    </a>
+                    <a href="/admin/feedbacks" class="nav-item hover:bg-blue-700 px-3 py-2 rounded">
+                        <i class="fas fa-comments mr-1"></i> Отзывы
+                    </a>
+                    <a href="/admin/forms" class="nav-item hover:bg-blue-700 px-3 py-2 rounded">
+                        <i class="fas fa-edit mr-1"></i> Формы
+                    </a>
+                    <a href="/admin/clients" class="nav-item hover:bg-blue-700 px-3 py-2 rounded">
+                        <i class="fas fa-users mr-1"></i> Клиенты
+                    </a>
+                    <a href="/admin/analytics" class="nav-item hover:bg-blue-700 px-3 py-2 rounded">
+                        <i class="fas fa-chart-bar mr-1"></i> Аналитика
+                    </a>
+                    <a href="/admin/settings" class="nav-item hover:bg-blue-700 px-3 py-2 rounded">
+                        <i class="fas fa-cog mr-1"></i> Настройки
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Основной контент -->
+    <main class="max-w-7xl mx-auto py-6 px-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Футер -->
+    <footer class="bg-gray-800 text-white py-4 mt-8">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p>&copy; 2025 Arenadata Feedback System</p>
+        </div>
+    </footer>
+
+    <script>
+        // Общие функции для админки
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+                type === 'success' ? 'bg-green-500' : 'bg-red-500'
+            } text-white`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+
+        function confirmAction(message) {
+            return confirm(message);
+        }
+
+            </script>
+</body>
+</html>

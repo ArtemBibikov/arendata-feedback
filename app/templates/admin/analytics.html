@@ -1,0 +1,223 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Аналитика - Arenadata Admin{% endblock %}
+
+{% block content %}
+<!-- Период выбора -->
+<div class="bg-white rounded-lg shadow p-6 mb-6">
+    <div class="flex justify-between items-center">
+        <h3 class="text-lg font-semibold text-gray-900">Период анализа</h3>
+        <div class="flex space-x-2">
+            <button onclick="loadAnalytics('week')" id="weekBtn" class="px-4 py-2 bg-blue-600 text-white rounded-md">Неделя</button>
+            <button onclick="loadAnalytics('month')" id="monthBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md">Месяц</button>
+            <button onclick="loadAnalytics('year')" id="yearBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md">Год</button>
+        </div>
+    </div>
+</div>
+
+
+<!-- Графики -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold mb-4">Динамика отзывов</h3>
+        <canvas id="trendsChart" width="400" height="200"></canvas>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold mb-4">Распределение по типам форм</h3>
+        <div class="relative" style="height: 300px; margin-bottom: 20px;">
+            <canvas id="formTypesChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Top проблемы -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold mb-4">Топ проблем</h3>
+        <div class="space-y-3">
+            <div class="flex justify-between items-center">
+                <span class="text-sm">Не работает экспорт в Excel</span>
+                <span class="text-sm font-medium">12 жалоб</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-sm">Медленная загрузка данных</span>
+                <span class="text-sm font-medium">8 жалоб</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-sm">Ошибка API v2</span>
+                <span class="text-sm font-medium">6 жалоб</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-sm">Проблемы с авторизацией</span>
+                <span class="text-sm font-medium">5 жалоб</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-sm">Неправильные расчеты</span>
+                <span class="text-sm font-medium">4 жалобы</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold mb-4">Активные клиенты</h3>
+        <div class="space-y-3">
+            <div class="flex justify-between items-center">
+                <span class="text-sm">Роснефть</span>
+                <span class="text-sm font-medium">25 отзывов</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-sm">Сбер</span>
+                <span class="text-sm font-medium">18 отзывов</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-sm">Газпром</span>
+                <span class="text-sm font-medium">15 отзывов</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-sm">ЛУКОЙЛ</span>
+                <span class="text-sm font-medium">12 отзывов</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-sm">Росатом</span>
+                <span class="text-sm font-medium">10 отзывов</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Эффективность команды -->
+<div class="bg-white rounded-lg shadow p-6">
+    <h3 class="text-lg font-semibold mb-4">Эффективность решения проблем</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="text-center">
+            <div class="text-3xl font-bold text-green-600">67%</div>
+            <p class="text-sm text-gray-600">Решено за 24 часа</p>
+        </div>
+        <div class="text-center">
+            <div class="text-3xl font-bold text-blue-600">4.2ч</div>
+            <p class="text-sm text-gray-600">Среднее время решения</p>
+        </div>
+        <div class="text-center">
+            <div class="text-3xl font-bold text-purple-600">89%</div>
+            <p class="text-sm text-gray-600">Удовлетворенность клиентов</p>
+        </div>
+    </div>
+</div>
+
+<script>
+let trendsChart, formTypesChart;
+
+function loadAnalytics(period) {
+    // Обновляем кнопки
+    document.querySelectorAll('[id$="Btn"]').forEach(btn => {
+        btn.className = 'px-4 py-2 bg-gray-200 text-gray-700 rounded-md';
+    });
+    document.getElementById(period + 'Btn').className = 'px-4 py-2 bg-blue-600 text-white rounded-md';
+    
+    // Загружаем данные
+    fetch(`/api/admin/analytics/data?period=${period}&_t=${Date.now()}`)
+        .then(response => response.json())
+        .then(data => {
+            console.log('Analytics data:', data); // Отладка
+            updateCharts(data);
+        });
+}
+
+function updateCharts(data) {
+    console.log('Updating charts with data:', data); // Отладка
+    
+    // Обновляем график трендов
+    if (trendsChart) {
+        console.log('TrendsChart exists, updating...'); // Отладка
+        trendsChart.data.labels = data.labels;
+        trendsChart.data.datasets[0].data = [...data.total];
+        trendsChart.data.datasets[1].data = [...data.critical];
+        trendsChart.update('none'); // Принудительное обновление без анимации
+        console.log('TrendsChart updated'); // Отладка
+    } else {
+        console.log('Creating new trendsChart...'); // Отладка
+        console.log('Data for new chart:', data); // Отладка
+        const ctx = document.getElementById('trendsChart').getContext('2d');
+        trendsChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Все отзывы',
+                    data: [...data.total],
+                    borderColor: 'rgb(59, 130, 246)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.1
+                }, {
+                    label: 'Критические',
+                    data: [...data.critical],
+                    borderColor: 'rgb(239, 68, 68)',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                animation: {
+                    duration: 0 // Отключаем анимацию для быстрого обновления
+                },
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+    
+    // Обновляем график типов форм
+    if (!formTypesChart) {
+        const formTypesCtx = document.getElementById('formTypesChart').getContext('2d');
+        formTypesChart = new Chart(formTypesCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Технические', 'Бизнес', 'Руководители'],
+                datasets: [{
+                    data: [data.form_types.tech, data.form_types.business, data.form_types.exec],
+                    backgroundColor: [
+                        '#3B82F6',
+                        '#10B981', 
+                        '#F59E0B'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    }
+                },
+                elements: {
+                    arc: {
+                        borderWidth: 1
+                    }
+                }
+            }
+        });
+    } else {
+        // Обновляем данные существующего графика
+        formTypesChart.data.datasets[0].data = [data.form_types.tech, data.form_types.business, data.form_types.exec];
+        formTypesChart.update();
+    }
+}
+
+// Инициализация при загрузке
+document.addEventListener('DOMContentLoaded', function() {
+    loadAnalytics('week');
+});
+</script>
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Редактор форм - Arenadata Admin{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <!-- Заголовок -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Редактор форм</h1>
+        <p class="mt-2 text-gray-600">Управление полями форм обратной связи</p>
+    </div>
+
+    <!-- Кнопка добавления -->
+    <div class="mb-6">
+        <a href="/admin/forms/add" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+            <i class="fas fa-plus mr-2"></i>Добавить новое поле
+        </a>
+    </div>
+
+    <!-- Формы по типам -->
+    <div class="space-y-8">
+        {% for form_type, configs in form_configs.items() %}
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-900">
+                    {% if form_type == 'tech' %}Техническая форма
+                    {% elif form_type == 'business' %}Бизнес форма
+                    {% else %}Форма руководителя{% endif %}
+                </h2>
+            </div>
+            
+            <div class="p-6">
+                {% if configs %}
+                    <div class="space-y-4">
+                        {% for config in configs %}
+                        <div class="border border-gray-200 rounded-lg p-4">
+                            <form method="POST" action="/admin/forms/{{ config.id }}/update" class="flex items-center justify-between">
+                                <div class="flex-1">
+                                    <input type="text" name="field_label" value="{{ config.field_label }}" 
+                                        class="font-medium text-gray-900 border-b border-transparent hover:border-gray-300 focus:border-blue-500 focus:outline-none px-1">
+                                    <div class="text-sm text-gray-500 mt-1">
+                                        {{ config.field_name }}
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center space-x-3">
+                                    <label class="flex items-center">
+                                        <input type="checkbox" name="required" {% if config.required %}checked{% endif %} 
+                                            class="mr-1">
+                                        <span class="text-sm">Обязательное</span>
+                                    </label>
+                                    
+                                    <label class="flex items-center">
+                                        <input type="hidden" name="is_active" value="false">
+                                        <input type="checkbox" name="is_active" value="true" {% if config.is_active %}checked{% endif %} 
+                                            class="mr-1">
+                                        <span class="text-sm">Активно</span>
+                                    </label>
+                                    
+                                    <button type="submit" class="text-green-600 hover:text-green-800">
+                                        <i class="fas fa-save"></i>
+                                    </button>
+                                    
+                                    <button type="button" onclick="deleteField({{ config.id }})" class="text-red-600 hover:text-red-800">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-gray-500 text-center py-8">Нет полей для этой формы</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+function deleteField(fieldId) {
+    if (confirm('Вы уверены, что хотите удалить это поле?')) {
+        fetch(`/admin/forms/${fieldId}/delete`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Ошибка при удалении поля');
+            }
+        })
+        .catch(error => {
+            alert('Ошибка при удалении поля');
+        });
+    }
+}
+</script>
+{% endblock %}

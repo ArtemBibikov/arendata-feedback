@@ -1,0 +1,170 @@
+"""
+Email Notification Service for Arenadata Feedback System
+Отправка email уведомлений клиентам
+"""
+
+import os
+import aiosmtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from typing import Dict, Any, Optional
+from jinja2 import Template
+from app.models import Feedback
+
+
+class EmailNotifier:
+    """Класс для отправки email уведомлений"""
+    
+    def __init__(self):
+        self.smtp_host = os.getenv("SMTP_HOST", "smtp.gmail.com")
+        smtp_port = os.getenv("SMTP_PORT", "587")
+        self.smtp_port = int(smtp_port) if smtp_port else 587
+        self.smtp_user = os.getenv("SMTP_USER", "")
+        self.smtp_password = os.getenv("SMTP_PASSWORD", "")
+        self.from_email = os.getenv("FROM_EMAIL", "noreply@arenadata.ru")
+        
+        # Получатели для HIGH приоритета
+        self.recipients = {
+            "exec_high": os.getenv("MANAGER_EMAIL", "product-lead@arenadata.ru"),
+            "business_high": os.getenv("SUPPORT_EMAIL", "support@arenadata.ru"),
+            "tech_high": os.getenv("TECH_LEAD_EMAIL", "tech-lead@arenadata.ru")
+        }
+        
+        # Проверка настроек
+        if not self.smtp_user or not self.smtp_password:
+            print("WARNING: Email credentials not configured")
+    
+    async def send_email(
+        self, 
+        to_email: str, 
+        subject: str, 
+        html_content: str,
+        text_content: Optional[str] = None
+    ) -> bool:
+        """Отправить email"""
+        if not self.smtp_user or not self.smtp_password:
+            return False
+        
+        try:
+            message = MIMEMultipart("alternative")
+            message["Subject"] = subject
+            message["From"] = self.from_email
+            message["To"] = to_email
+            
+            # Добавляем текстовую версию
+            if text_content:
+                text_part = MIMEText(text_content, "plain", "utf-8")
+                message.attach(text_part)
+            
+            # Добавляем HTML версию
+            html_part = MIMEText(html_content, "html", "utf-8")
+            message.attach(html_part)
+            
+            async with aiosmtplib.SMTP(
+                host=self.smtp_host,
+                port=self.smtp_port,
+                use_tls=True
+            ) as smtp:
+                await smtp.login(self.smtp_user, self.smtp_password)
+                await smtp.send_message(message)
+                return True
+                
+        except Exception as e:
+            print(f"Error sending email: {e}")
+            return False
+    
+    def format_confirmation_email(self, feedback: Feedback) -> Dict[str, str]:
+        """Отформатировать email подтверждения"""
+        subject = "Ваш отзыв принят - Arenadata"
+        
+        html_template = """
+        <html>
+        <body>
+            <h2>Спасибо за ваш отзыв!</h2>
+            <p>Мы получили ваше обращение и обязательно его рассмотрим.</p>
+            
+            <h3>Детали обращения:</h3>
+            <ul>
+                <li><strong>ID:</strong> {{ feedback.id }}</li>
+                <li><strong>Тип:</strong> {{ feedback.form_type }}</li>
+                <li><strong>Срочность:</strong> {{ feedback.urgency }}</li>
+                <li><strong>Время:</strong> {{ feedback.created_at.strftime('%Y-%m-%d %H:%M') }}</li>
+            </ul>
+            
+            {% if feedback.urgency == 'critical' %}
+            <p><strong>Ваш отзыв отмечен как критический. Мы свяжемся с вами в ближайшее время.</strong></p>
+            {% endif %}
+            
+            <p>С уважением,<br>Команда Arenadata</p>
+        </body>
+        </html>
+        """
+        
+        text_template = """
+        Спасибо за ваш отзыв!
+        
+        Мы получили ваше обращение и обязательно его рассмотрим.
+        
+        Детали обращения:
+        ID: {{ feedback.id }}
+        Тип: {{ feedback.form_type }}
+        Срочность: {{ feedback.urgency }}
+        Время: {{ feedback.created_at.strftime('%Y-%m-%d %H:%M') }}
+        
+        С уважением,
+        Команда Arenadata
+        """
+        
+        html_content = Template(html_template).render(feedback=feedback)
+        text_content = Template(text_template).render(feedback=feedback)
+        
+        return {
+            "subject": subject,
+            "html": html_content,
+            "text": text_content
+        }
+    
+    async def send_confirmation(self, feedback: Feedback) -> bool:
+        """Отправить подтверждение получения отзыва"""
+        if not feedback.client_email:
+            return True  # Нет email для отправки
+        
+        email_data = self.format_confirmation_email(feedback)
+        
+        return await self.send_email(
+            to_email=feedback.client_email,
+            subject=email_data["subject"],
+            html_content=email_data["html"],
+            text_content=email_data["text"]
+        )
+    
+    async def test_connection(self) -> bool:
+        """Проверить соединение с SMTP сервером"""
+        if not self.smtp_user or not self.smtp_password:
+            return False
+        
+        try:
+            async with aiosmtplib.SMTP(
+                host=self.smtp_host,
+                port=self.smtp_port,
+                use_tls=True
+            ) as smtp:
+                await smtp.login(self.smtp_user, self.smtp_password)
+                return True
+        except Exception as e:
+            print(f"Email connection test failed: {e}")
+            return False
+
+
+# Глобальный экземпляр нотификатора
+email_notifier = EmailNotifier()
+
+
+async def send_confirmation_email(feedback: Feedback) -> bool:
+    """Отправить email подтверждения"""
+    return await email_notifier.send_confirmation(feedback)
+
+
+async def test_email_connection() -> bool:
+    """Проверить соединение с email сервером"""
+    return await email_notifier.test_connection()

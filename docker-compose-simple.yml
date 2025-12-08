@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: arenadata_feedback
+      POSTGRES_USER: arenadata_app
+      POSTGRES_PASSWORD: app_password_123
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U arenadata_app -d arenadata_feedback"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+
+  api:
+    image: arenadata-feedback:latest
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://arenadata_app:app_password_123@postgres:5432/arenadata_feedback
+      - REDIS_URL=redis://redis:6379
+      - ADMIN_PASSWORD=admin123
+      - SECRET_KEY=your-secret-key-change-in-production
+      - TELEGRAM_BOT_TOKEN=8541985274:AAFdP4KZgDTO0gEqg-IFO5RcSc53J9VvftQ
+      - TELEGRAM_CHAT_ID=-4866903302
+      - SMTP_HOST=smtp.gmail.com
+      - SMTP_PORT=587
+      - SMTP_USER=your@gmail.com
+      - SMTP_PASSWORD=your-app-password
+      - FROM_EMAIL=noreply@arenadata.ru
+      - MANAGER_EMAIL=manager@arenadata.ru
+      - SUPPORT_EMAIL=support@arenadata.ru
+      - TECH_EMAIL=tech@arenadata.ru
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+
+  adminer:
+    image: adminer
+    ports:
+      - "8081:8080"
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:

@@ -1,0 +1,92 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Настройки - Arenadata Admin{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow p-6">
+    <h3 class="text-lg font-semibold mb-6 text-gray-900">Системные настройки</h3>
+    
+    <form method="POST" class="space-y-6">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Пароль админки</label>
+            <input type="password" name="admin_password" value="{{ settings.admin_password }}" 
+                class="w-full border border-gray-300 rounded-md px-3 py-2">
+        </div>
+        
+        <div>
+            <label class="flex items-center">
+                <input type="checkbox" name="telegram_enabled" {% if settings.telegram_bot_token %}checked{% endif %} 
+                    class="mr-2">
+                <span class="text-sm font-medium text-gray-700">Включить Telegram уведомления</span>
+            </label>
+        </div>
+        
+        <div class="border-t pt-6">
+            <h4 class="text-md font-medium text-gray-900 mb-4">Настройки Gmail</h4>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">SMTP хост</label>
+                    <input type="text" name="smtp_host" value="{{ settings.smtp_host or '' }}" 
+                        class="w-full border border-gray-300 rounded-md px-3 py-2" placeholder="smtp.gmail.com">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">SMTP порт</label>
+                    <input type="text" name="smtp_port" value="{{ settings.smtp_port or '' }}" 
+                        class="w-full border border-gray-300 rounded-md px-3 py-2" placeholder="587">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email для аутентификации</label>
+                    <input type="email" name="smtp_user" value="{{ settings.smtp_user or '' }}" 
+                        class="w-full border border-gray-300 rounded-md px-3 py-2" placeholder="your@gmail.com">
+                    <p class="text-xs text-gray-500 mt-1">Ваш Gmail для отправки писем</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Пароль приложения</label>
+                    <input type="password" name="smtp_password" value="{{ settings.smtp_password or '' }}" 
+                        class="w-full border border-gray-300 rounded-md px-3 py-2" placeholder="16-значный пароль">
+                </div>
+                
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email отправителя</label>
+                    <input type="email" name="from_email" value="{{ settings.from_email or '' }}" 
+                        class="w-full border border-gray-300 rounded-md px-3 py-2" placeholder="noreply@arenadata.ru">
+                </div>
+            </div>
+        </div>
+                
+        <div class="flex space-x-3">
+            <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700">
+                Сохранить настройки
+            </button>
+        </div>
+            </form>
+</div>
+
+<div class="bg-white rounded-lg shadow p-6 mt-6">
+    <h3 class="text-lg font-semibold mb-4 text-gray-900">Статус системы</h3>
+    <div class="space-y-2">
+        <div class="flex justify-between">
+            <span>База данных:</span>
+            <span class="text-green-600">Подключена</span>
+        </div>
+        <div class="flex justify-between">
+            <span>Telegram бот:</span>
+            <span class="{% if settings.telegram_bot_token %}text-green-600{% else %}text-red-600{% endif %}">
+                {% if settings.telegram_bot_token %}Активен{% else %}Не настроен{% endif %}
+            </span>
+        </div>
+        <div class="flex justify-between">
+            <span>Gmail SMTP:</span>
+            <span class="{% if settings.smtp_user and settings.smtp_password %}text-green-600{% else %}text-red-600{% endif %}">
+                {% if settings.smtp_user and settings.smtp_password %}Настроен{% else %}Не настроен{% endif %}
+            </span>
+        </div>
+            </div>
+</div>
+
+
+{% endblock %}

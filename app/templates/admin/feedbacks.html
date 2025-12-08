@@ -1,0 +1,246 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Управление отзывами - Arenadata Admin{% endblock %}
+
+{% block content %}
+<!-- Заголовок с экспортом -->
+<div class="bg-white rounded-lg shadow p-6 mb-6">
+    <div class="flex justify-between items-center">
+        <h3 class="text-lg font-semibold text-gray-900">Отзывы ({{ total }})</h3>
+        <div class="flex space-x-2">
+            <a href="/admin/export/feedbacks/csv{% if request.query_string %}?{{ request.query_string }}{% endif %}" 
+               class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm">
+                <i class="fas fa-file-csv mr-2"></i>CSV
+            </a>
+            <a href="/admin/export/feedbacks/excel{% if request.query_string %}?{{ request.query_string }}{% endif %}" 
+               class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 text-sm">
+                <i class="fas fa-file-excel mr-2"></i>Excel
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Фильтры -->
+<div class="bg-white rounded-lg shadow p-6 mb-6">
+    <h3 class="text-lg font-semibold mb-4 text-gray-900">Фильтры</h3>
+    <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Тип формы</label>
+            <select name="form_type" class="w-full border border-gray-300 rounded-md px-3 py-2">
+                <option value="">Все типы</option>
+                <option value="tech" {% if filters.form_type == 'tech' %}selected{% endif %}>Технический</option>
+                <option value="business" {% if filters.form_type == 'business' %}selected{% endif %}>Бизнес</option>
+                <option value="exec" {% if filters.form_type == 'exec' %}selected{% endif %}>Руководитель</option>
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Статус</label>
+            <select name="status" class="w-full border border-gray-300 rounded-md px-3 py-2">
+                <option value="">Все статусы</option>
+                <option value="new" {% if filters.status == 'new' %}selected{% endif %}>Новые</option>
+                <option value="in_progress" {% if filters.status == 'in_progress' %}selected{% endif %}>В работе</option>
+                <option value="resolved" {% if filters.status == 'resolved' %}selected{% endif %}>Решено</option>
+                <option value="rejected" {% if filters.status == 'rejected' %}selected{% endif %}>Отклонено</option>
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Срочность</label>
+            <select name="urgency" class="w-full border border-gray-300 rounded-md px-3 py-2">
+                <option value="">Все уровни</option>
+                <option value="high" {% if filters.urgency == 'high' %}selected{% endif %}>Высокие</option>
+                <option value="medium" {% if filters.urgency == 'medium' %}selected{% endif %}>Средние</option>
+                <option value="low" {% if filters.urgency == 'low' %}selected{% endif %}>Низкие</option>
+            </select>
+        </div>
+        <div class="flex items-end">
+            <button type="submit" class="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                <i class="fas fa-filter mr-2"></i>Применить
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Таблица отзывов -->
+<div class="bg-white rounded-lg shadow">
+    <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-semibold">Отзывы ({{ total }})</h3>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Клиент</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Проблема</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Тип</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Срочность</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Статус</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Дата</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Действия</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for feedback in feedbacks %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ feedback.id }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">{{ feedback.client_name or 'Аноним' }}</div>
+                        <div class="text-sm text-gray-500">{{ feedback.client_email or '' }}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm text-gray-900 max-w-xs truncate">{{ feedback.problem_text or '' }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                            {{ feedback.form_type }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                            {% if feedback.urgency == 'high' %}bg-red-100 text-red-800
+                            {% elif feedback.urgency == 'medium' %}bg-orange-100 text-orange-800
+                            {% elif feedback.urgency == 'low' %}bg-green-100 text-green-800{% endif %}">
+                            {{ feedback.urgency }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <select onchange="updateStatus({{ feedback.id }}, this.value)" class="text-sm border border-gray-300 rounded px-2 py-1">
+                            <option value="new" {% if feedback.status == 'new' %}selected{% endif %}>Новый</option>
+                            <option value="in_progress" {% if feedback.status == 'in_progress' %}selected{% endif %}>В работе</option>
+                            <option value="resolved" {% if feedback.status == 'resolved' %}selected{% endif %}>Решено</option>
+                            <option value="rejected" {% if feedback.status == 'rejected' %}selected{% endif %}>Отклонено</option>
+                        </select>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ feedback.created_at.strftime('%d.%m.%Y') }} {{ (feedback.created_at.hour + 3) | string }}:{{ feedback.created_at.strftime('%M') }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <a href="/admin/feedbacks/{{ feedback.id }}" class="text-blue-600 hover:text-blue-900 mr-3">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <span class="text-gray-400 mr-3" title="Комментарии в разработке">
+                            <i class="fas fa-comment"></i>
+                        </span>
+                        <button onclick="deleteFeedback({{ feedback.id }})" class="text-red-600 hover:text-red-900">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Модальное окно для комментариев -->
+<div id="commentModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 w-96 bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-medium text-gray-900">Добавить комментарий</h3>
+            <div class="mt-2">
+                <textarea id="commentText" rows="4" class="w-full border border-gray-300 rounded-md px-3 py-2" placeholder="Введите комментарий..."></textarea>
+            </div>
+            <div class="items-center px-4 py-3">
+                <button onclick="saveComment()" class="px-4 py-2 bg-blue-600 text-white text-base font-medium rounded-md w-24 mr-2 hover:bg-blue-700">
+                    Сохранить
+                </button>
+                <button onclick="closeCommentModal()" class="px-4 py-2 bg-gray-300 text-gray-800 text-base font-medium rounded-md w-24 hover:bg-gray-400">
+                    Отмена
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentFeedbackId = null;
+
+function updateStatus(feedbackId, newStatus) {
+    const formData = new FormData();
+    formData.append('status', newStatus);
+    
+    fetch(`/api/admin/feedbacks/${feedbackId}/status`, {
+        method: 'PUT',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        showNotification('Статус обновлен', 'success');
+        // Обновить страницу чтобы увидеть изменения
+        setTimeout(() => location.reload(), 1000);
+    })
+    .catch(error => {
+        showNotification('Ошибка при обновлении статуса', 'error');
+    });
+}
+
+function addComment(feedbackId) {
+    currentFeedbackId = feedbackId;
+    document.getElementById('commentModal').classList.remove('hidden');
+}
+
+function closeCommentModal() {
+    document.getElementById('commentModal').classList.add('hidden');
+    document.getElementById('commentText').value = '';
+    currentFeedbackId = null;
+}
+
+function saveComment() {
+    const comment = document.getElementById('commentText').value;
+    if (!comment.trim()) return;
+    
+    fetch(`/api/admin/feedbacks/${currentFeedbackId}/comment`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({comment: comment})
+    })
+    .then(response => response.json())
+    .then(data => {
+        showNotification('Комментарий добавлен', 'success');
+        closeCommentModal();
+    })
+    .catch(error => {
+        showNotification('Ошибка при добавлении комментария', 'error');
+    });
+}
+
+function deleteFeedback(feedbackId) {
+    if (!confirmAction('Удалить этот отзыв?')) return;
+    
+    fetch(`/api/feedback/${feedbackId}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        showNotification('Отзыв удален', 'success');
+        location.reload();
+    })
+    .catch(error => {
+        showNotification('Ошибка при удалении отзыва', 'error');
+    });
+}
+
+function exportData(format) {
+    const params = new URLSearchParams(window.location.search);
+    params.set('format', format);
+    window.open(`/api/admin/export/feedbacks?${params}`);
+}
+
+function showNotification(message, type) {
+    // Создаем уведомление
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 px-6 py-3 rounded-md text-white ${
+        type === 'success' ? 'bg-green-600' : 'bg-red-600'
+    } z-50`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    // Удаляем через 3 секунды
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+</script>
+{% endblock %}

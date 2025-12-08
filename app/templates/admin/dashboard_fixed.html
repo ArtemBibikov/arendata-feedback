@@ -1,0 +1,322 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Дашборд - Arenadata Admin{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Карточки статистики -->
+    <div class="bg-white rounded-lg shadow p-6 card-hover fade-in">
+        <div class="flex items-center">
+            <div class="p-3 bg-blue-100 rounded-full">
+                <i class="fas fa-comments text-blue-600 text-xl"></i>
+            </div>
+            <div class="ml-4">
+                <p class="text-gray-500 text-sm">Всего отзывов</p>
+                <p class="text-2xl font-bold pulse-number">{{ stats.total_feedbacks or 0 }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6 card-hover fade-in">
+        <div class="flex items-center">
+            <div class="p-3 bg-red-100 rounded-full">
+                <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+            </div>
+            <div class="ml-4">
+                <p class="text-gray-500 text-sm">Высокие</p>
+                <p class="text-2xl font-bold text-red-600 pulse-number">{{ stats.high_feedbacks or 0 }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6 card-hover fade-in">
+        <div class="flex items-center">
+            <div class="p-3 bg-yellow-100 rounded-full">
+                <i class="fas fa-clock text-yellow-600 text-xl"></i>
+            </div>
+            <div class="ml-4">
+                <p class="text-gray-500 text-sm">Новые</p>
+                <p class="text-2xl font-bold text-yellow-600 pulse-number">{{ stats.new_feedbacks or 0 }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6 card-hover fade-in">
+        <div class="flex items-center">
+            <div class="p-3 bg-green-100 rounded-full">
+                <i class="fas fa-check-circle text-green-600 text-xl"></i>
+            </div>
+            <div class="ml-4">
+                <p class="text-gray-500 text-sm">Решено</p>
+                <p class="text-2xl font-bold text-green-600 pulse-number">{{ stats.resolved_feedbacks or 0 }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Графики -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <div class="bg-white rounded-lg shadow p-6 card-hover fade-in">
+        <h3 class="text-lg font-semibold mb-4 text-gray-900">Отзывы по дням</h3>
+        <div class="relative" style="height: 300px;">
+            <canvas id="dailyChart"></canvas>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6 card-hover fade-in">
+        <h3 class="text-lg font-semibold mb-4 text-gray-900">Срочность проблем</h3>
+        <div class="relative" style="height: 300px;">
+            <canvas id="urgencyChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Последние отзывы -->
+<div class="bg-white rounded-lg shadow">
+    <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900">Последние отзывы</h3>
+    </div>
+    <div class="p-6">
+        {% if recent_feedbacks %}
+        <div class="space-y-4">
+            {% for feedback in recent_feedbacks %}
+            <div class="border-l-4 {% if feedback.urgency == 'high' %}border-red-500{% elif feedback.urgency == 'medium' %}border-orange-500{% else %}border-gray-300{% endif %} pl-4">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="font-medium">{{ feedback.client_name or 'Аноним' }}</p>
+                        <p class="text-sm text-gray-600">{{ (feedback.problem_text or '')[:100] }}{% if feedback.problem_text and feedback.problem_text|length > 100 %}...{% endif %}</p>
+                        <div class="flex items-center space-x-2 mt-1">
+                            <span class="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded">{{ feedback.form_type }}</span>
+                            <span class="text-xs px-2 py-1 {% if feedback.urgency == 'high' %}bg-red-100 text-red-800{% elif feedback.urgency == 'medium' %}bg-orange-100 text-orange-800{% else %}bg-gray-100 text-gray-800{% endif %} rounded">{{ feedback.urgency }}</span>
+                            <span class="text-xs text-gray-500">{{ feedback.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <a href="/admin/feedbacks/{{ feedback.id }}" class="text-blue-600 hover:text-blue-800">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-gray-500">Отзывов пока нет</p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// Данные из шаблона
+const dailyFeedbacks = {{ daily_feedbacks|tojson }};
+const urgencyData = {{ urgency_data|tojson }};
+const formTypes = {{ form_types|tojson }};
+const statusData = {{ status_data|tojson }};
+
+console.log('Daily feedbacks:', dailyFeedbacks);
+console.log('Urgency data:', urgencyData);
+
+// График отзывов по дням
+const dailyCanvas = document.getElementById('dailyChart');
+console.log('Daily canvas:', dailyCanvas);
+console.log('Daily feedbacks length:', dailyFeedbacks.length);
+
+if (dailyCanvas && dailyFeedbacks.length > 0) {
+    console.log('Creating daily chart...');
+    const dailyCtx = dailyCanvas.getContext('2d');
+    console.log('Context:', dailyCtx);
+    console.log('Chart library:', typeof Chart);
+    
+    new Chart(dailyCtx, {
+        type: 'line',
+        data: {
+            labels: dailyFeedbacks.map(d => {
+                const date = new Date(d.date);
+                return date.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric' });
+            }),
+            datasets: [{
+                label: 'Отзывы',
+                data: dailyFeedbacks.map(d => d.count),
+                borderColor: 'rgb(59, 130, 246)',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.1,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false,
+                    title: {
+                        display: true,
+                        text: 'Отзывы по дням'
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1,
+                        precision: 0
+                    },
+                    grid: {
+                        display: true,
+                        color: 'rgba(0, 0, 0, 0.1)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            elements: {
+                point: {
+                    radius: 5,
+                    hoverRadius: 7
+                },
+                line: {
+                    borderWidth: 2
+                }
+            }
+        }
+    });
+} else {
+    console.log('Daily chart conditions not met');
+    // Альтернативный рендеринг через Canvas API
+    if (dailyCanvas && dailyFeedbacks.length > 0) {
+        const ctx = dailyCanvas.getContext('2d');
+        const width = dailyCanvas.width;
+        const height = dailyCanvas.height;
+        
+        // Очистка canvas
+        ctx.clearRect(0, 0, width, height);
+        
+        // Простая отрисовка данных
+        ctx.fillStyle = '#3B82F6';
+        ctx.font = '12px Arial';
+        ctx.fillText('Отзывы по дням:', 10, 20);
+        
+        dailyFeedbacks.forEach((item, index) => {
+            const x = 10 + (index * 50);
+            const y = 40 + (item.count * 20);
+            ctx.fillRect(x, height - y, 30, item.count * 20);
+            ctx.fillText(item.count, x + 5, height - y - 5);
+        });
+    }
+}
+
+// График срочности
+const urgencyCanvas = document.getElementById('urgencyChart');
+console.log('Urgency canvas:', urgencyCanvas);
+console.log('Urgency data length:', urgencyData.length);
+
+if (urgencyCanvas && urgencyData.length > 0) {
+    console.log('Creating urgency chart...');
+    const urgencyCtx = urgencyCanvas.getContext('2d');
+    console.log('Urgency context:', urgencyCtx);
+    
+    new Chart(urgencyCtx, {
+        type: 'doughnut',
+        data: {
+            labels: urgencyData.map(d => {
+                switch(d.urgency) {
+                    case 'high': return 'Высокая';
+                    case 'medium': return 'Средняя';
+                    case 'low': return 'Низкая';
+                    default: return 'Не указана';
+                }
+            }),
+            datasets: [{
+                data: urgencyData.map(d => d.count),
+                backgroundColor: [
+                    'rgb(59, 130, 246)',   // Средняя - синий (первая в данных)
+                    'rgb(239, 68, 68)',    // Высокая - красный (вторая в данных)
+                    'rgb(34, 197, 94)'     // Низкая - зеленый (третья в данных)
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        font: {
+                            size: 12
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Срочность проблем'
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed || 0;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((value / total) * 100).toFixed(1);
+                            return `${label}: ${value} (${percentage}%)`;
+                        }
+                    }
+                }
+            },
+            elements: {
+                arc: {
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }
+            }
+        }
+    });
+} else {
+    console.log('Urgency chart conditions not met');
+    // Альтернативный рендеринг через Canvas API
+    if (urgencyCanvas && urgencyData.length > 0) {
+        const ctx = urgencyCanvas.getContext('2d');
+        const width = urgencyCanvas.width;
+        const height = urgencyCanvas.height;
+        
+        // Очистка canvas
+        ctx.clearRect(0, 0, width, height);
+        
+        // Простая отрисовка данных
+        ctx.fillStyle = '#374151';
+        ctx.font = '12px Arial';
+        ctx.fillText('Срочность проблем:', 10, 20);
+        
+        const colors = {
+            'medium': '#3B82F6',  // Средняя - синий
+            'high': '#EF4444',    // Высокая - красный
+            'low': '#22C55E'      // Низкая - зеленый
+        };
+        
+        urgencyData.forEach((item, index) => {
+            const x = 10 + (index * 80);
+            const y = 40;
+            const color = colors[item.urgency] || '#9CA3AF';
+            
+            ctx.fillStyle = color;
+            ctx.fillRect(x, y, 60, 30);
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillText(item.count, x + 25, y + 20);
+            
+            ctx.fillStyle = '#374151';
+            ctx.fillText(item.urgency, x, y + 45);
+        });
+    }
+}
+
+// Автообновление каждые 30 секунд
+setInterval(() => {
+    location.reload();
+}, 30000);
+</script>
+{% endblock %}
