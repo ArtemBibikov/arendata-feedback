@@ -42,6 +42,7 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 # Роутеры API
 app.include_router(feedback.router, prefix="/api", tags=["feedback"])
 app.include_router(forms.router, prefix="/api", tags=["forms"])
+app.include_router(forms.router, tags=["forms-html"])
 app.include_router(admin.router, prefix="/api", tags=["admin"])
 app.include_router(admin_panel.router)
 

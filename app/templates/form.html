@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title }}</title>
+    <title>{{ form_title or title }} - Arenadata</title>
         <style>
         * {
             margin: 0;
@@ -13,16 +13,32 @@
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: #ffffff;
+            background: url('/static/data.jpg') center center/cover no-repeat;
+            background-attachment: fixed;
             min-height: 100vh;
             color: #2c3e50;
+            padding: 20px 0;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: -1;
         }
         
         .container {
-            max-width: 100%;
+            max-width: 800px;
             margin: 0 auto;
             background: white;
-            min-height: 100vh;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
             position: relative;
         }
         
@@ -624,11 +640,11 @@
             select.appendChild(defaultOption);
             
             // Добавляем опции
-            if (field.options && field.options.choices) {
-                field.options.choices.forEach(option => {
+            if (field.options) {
+                Object.entries(field.options).forEach(([key, value]) => {
                     const optionElement = document.createElement("option");
-                    optionElement.value = option;
-                    optionElement.textContent = option;
+                    optionElement.value = key;
+                    optionElement.textContent = value;
                     select.appendChild(optionElement);
                 });
             }

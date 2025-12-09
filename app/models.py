@@ -6,6 +6,7 @@ SQLAlchemy models for Arenadata Feedback System
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, Text, ARRAY, DECIMAL
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.sql import func
+import uuid
 
 from app.database import Base
 

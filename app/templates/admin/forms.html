@@ -239,21 +239,21 @@ function updateFieldStatus(fieldId, status) {
 
 // Реальное время обновления формы
 function setupRealTimeUpdates() {
-    // Проверяем обновления каждые 5 секунд
+    // Проверяем обновления каждые 3 секунды
     setInterval(() => {
         fetch('/admin/forms/status')
         .then(response => response.json())
         .then(data => {
             console.log('Status update:', data); // Отладка
-            // Обновляем статусы полей если изменились
-            Object.keys(data.fields).forEach(fieldId => {
-                updateFieldStatus(fieldId, data.fields[fieldId]);
-            });
+            // Перезагружаем страницу если есть изменения
+            if (data.reload) {
+                location.reload();
+            }
         })
         .catch(error => {
             console.log('Status update error:', error);
         });
-    }, 5000);
+    }, 3000);
 }
 
 function deleteField(fieldId) {

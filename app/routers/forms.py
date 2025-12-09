@@ -4,7 +4,8 @@ Endpoints для работы с динамическими формами
 """
 
 from typing import List, Dict, Any
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -191,6 +192,37 @@ async def list_forms(db: Session = Depends(get_db)):
         }
     
     return {
-        "forms": forms_info,
-        "total_types": len(forms_info)
+        "forms": result
     }
+
+
+# HTML роуты для форм
+@router.get("/tech", response_class=HTMLResponse)
+async def tech_form(request: Request):
+    from fastapi.templating import Jinja2Templates
+    templates = Jinja2Templates(directory="app/templates")
+    return templates.TemplateResponse("form.html", {
+        "request": request,
+        "form_type": "tech",
+        "form_title": "Техническая форма"
+    })
+
+@router.get("/business", response_class=HTMLResponse)
+async def business_form(request: Request):
+    from fastapi.templating import Jinja2Templates
+    templates = Jinja2Templates(directory="app/templates")
+    return templates.TemplateResponse("form.html", {
+        "request": request,
+        "form_type": "business", 
+        "form_title": "Бизнес форма"
+    })
+
+@router.get("/exec", response_class=HTMLResponse)
+async def exec_form(request: Request):
+    from fastapi.templating import Jinja2Templates
+    templates = Jinja2Templates(directory="app/templates")
+    return templates.TemplateResponse("form.html", {
+        "request": request,
+        "form_type": "exec",
+        "form_title": "Форма для руководителей"
+    })

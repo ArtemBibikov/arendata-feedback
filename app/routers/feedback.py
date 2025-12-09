@@ -14,6 +14,8 @@ from app.crud import (
     create_feedback, update_feedback, delete_feedback,
     get_stats, get_recent_feedbacks
 )
+from app.schemas import Feedback
+# from app.crud import create_client
 from app.schemas import (
     Feedback, FeedbackCreate, FeedbackUpdate, 
     FeedbackListResponse, StatsResponse
@@ -68,19 +70,19 @@ async def create_new_feedback(
     try:
         # Ищем или создаем клиента
         client = None
-        if feedback.client_email:
-            client = get_client_by_email(db=db, email=feedback.client_email)
+        # if feedback.client_email:
+        #     # client = get_client_by_email(db=db, email=feedback.client_email)
             
-            if not client:
-                # Создаем нового клиента
-                client_data = {
-                    "client_id": feedback.client_email.split("@")[0],  # Простая генерация ID
-                    "client_name": feedback.client_name or feedback.client_email.split("@")[0],
-                    "client_email": feedback.client_email,
-                    "client_type": "technical" if feedback.form_type == "tech" else "business" if feedback.form_type == "business" else "executive"
-                }
-                client = create_client(db=db, client=ClientCreate(**client_data))
-                feedback_dict["client_id"] = str(client.id)  # Преобразуем в строку
+        #     # if not client:
+        #     #     # Создаем нового клиента
+        #     #     client_data = {
+        #     #         "client_id": feedback.client_email.split("@")[0],  # Простая генерация ID
+        #     #         "client_name": feedback.client_name or feedback.client_email.split("@")[0],
+        #     #         "client_email": feedback.client_email,
+        #     #         "client_type": "technical" if feedback.form_type == "tech" else "business" if feedback.form_type == "business" else "executive"
+        #     #     }
+        #     #     client = create_client(db=db, client=ClientCreate(**client_data))
+        #     # feedback_dict["client_id"] = str(client.id)  # Преобразуем в строку
         
         db_feedback = create_feedback(db=db, feedback=FeedbackCreate(**feedback_dict))
 

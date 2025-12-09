@@ -339,7 +339,7 @@ async def admin_forms(request: Request, db: Session = Depends(get_db)):
 @router.post("/admin/forms/add")
 async def add_form_field(
     form_type: str = Form(...),
-    section_name: str = Form(...),
+    section_name: str = Form(""),
     field_name: str = Form(...),
     field_label: str = Form(...),
     required: bool = Form(False),
@@ -349,10 +349,9 @@ async def add_form_field(
         print(f"Adding field: {form_type}, {section_name}, {field_name}, {field_label}, {required}")
         
         # Проверяем обязательные поля
-        if not all([form_type, section_name, field_name, field_label]):
+        if not all([form_type, field_name, field_label]):
             missing_fields = []
             if not form_type: missing_fields.append("form_type")
-            if not section_name: missing_fields.append("section_name")
             if not field_name: missing_fields.append("field_name")
             if not field_label: missing_fields.append("field_label")
             
@@ -376,7 +375,7 @@ async def add_form_field(
         
         print(f"Field added with ID: {new_config.id}")
         
-        return {"success": True, "message": "Pole dobavleno", "field_id": new_config.id}
+        return {"success": True, "message": "field added", "field_id": new_config.id}
     
     except Exception as e:
         print(f"Error adding field: {str(e)}")
@@ -391,12 +390,12 @@ async def toggle_form_field(
 ):
     config = db.query(FormConfig).filter(FormConfig.id == config_id).first()
     if not config:
-        raise HTTPException(status_code=404, detail="Поле не найдено")
+        raise HTTPException(status_code=404, detail="field not found")
     
     config.is_active = is_active
     db.commit()
     
-    return {"message": f"Поле {config.field_name} {'активировано' if is_active else 'деактивировано'}"}
+    return {"message": f"field {config.field_name} {'activated' if is_active else 'deactivated'}"}
 
 @router.post("/admin/forms/reorder")
 async def reorder_form_fields(
@@ -436,12 +435,12 @@ async def delete_form_field(
 ):
     config = db.query(FormConfig).filter(FormConfig.id == config_id).first()
     if not config:
-        raise HTTPException(status_code=404, detail="Поле не найдено")
+        raise HTTPException(status_code=404, detail="field not found")
     
     db.delete(config)
     db.commit()
     
-    return {"success": True, "message": "Поле удалено"}
+    return {"success": True, "message": "field deleted"}
 
 @router.post("/admin/forms/{config_id}/update")
 async def update_form_field(
@@ -457,7 +456,7 @@ async def update_form_field(
     config = db.query(FormConfig).filter(FormConfig.id == config_id).first()
     if not config:
         print(f"Field {config_id} not found")
-        raise HTTPException(status_code=404, detail="Поле не найдено")
+        raise HTTPException(status_code=404, detail="field not found")
     
     print(f"Before update: {config.field_label}, {config.field_type}")
     
@@ -470,7 +469,11 @@ async def update_form_field(
     
     print(f"After update: {config.field_label}, {config.field_type}")
     
-    return {"success": True, "message": "Pole obnovleno"}
+    return {"success": True, "message": "saved"}
+
+@router.get("/admin/forms/status")
+async def forms_status():
+    return {"status": "ok", "reload": False}
 
 @router.get("/admin/export/feedbacks/csv")
 async def export_feedbacks_csv(
