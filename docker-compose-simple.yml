@@ -17,18 +17,12 @@ services:
       timeout: 5s
       retries: 5
 
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6380:6379"
-
   api:
     image: arenadata-feedback:latest
     ports:
       - "8000:8000"
     environment:
       - DATABASE_URL=postgresql://arenadata_app:app_password_123@postgres:5432/arenadata_feedback
-      - REDIS_URL=redis://redis:6379
       - ADMIN_PASSWORD=admin123
       - SECRET_KEY=your-secret-key-change-in-production
       - TELEGRAM_BOT_TOKEN=8541985274:AAFdP4KZgDTO0gEqg-IFO5RcSc53J9VvftQ
@@ -44,8 +38,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      redis:
-        condition: service_started
     restart: unless-stopped
 
   adminer:

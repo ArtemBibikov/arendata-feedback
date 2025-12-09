@@ -73,22 +73,8 @@ services:
       - ./app:/app/app
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
-  # Redis для кэширования (опционально)
-  redis:
-    image: redis:7-alpine
-    container_name: arenadata_redis
-    ports:
-      - "6379:6379"
-    networks:
-      - arenadata_network
-    restart: unless-stopped
-    volumes:
-      - redis_data:/data
-
-volumes:
+  volumes:
   postgres_data:
-    driver: local
-  redis_data:
     driver: local
 
 networks:
