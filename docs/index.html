@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arenadata Feedback - QR Демонстрация</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .qr-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .qr-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4">
+    <div class="max-w-6xl w-full">
+        <!-- Заголовок -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-white mb-4">
+                <i class="fas fa-qrcode mr-3"></i>Arenadata Feedback System
+            </h1>
+            <p class="text-xl text-white/90">Сканируйте QR-код для доступа к системе</p>
+            <p class="text-lg text-white/75 mt-2">Демонстрация системы обратной связи</p>
+        </div>
+
+        <!-- QR-коды -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Админка -->
+            <div class="qr-card rounded-xl p-6 text-center shadow-lg">
+                <div class="bg-gradient-to-br from-gray-100 to-gray-200 p-4 rounded-lg mb-4">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://artembibikov.github.io/arendata-feedback/admin" 
+                         alt="QR-код админки" 
+                         class="w-32 h-32 mx-auto">
+                </div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">
+                    <i class="fas fa-cog mr-2 text-gray-600"></i>Админ панель
+                </h3>
+                <p class="text-sm text-gray-600 mb-3">Управление системой</p>
+                <div class="text-xs bg-gray-100 px-2 py-1 rounded">
+                    admin/admin123
+                </div>
+            </div>
+
+            <!-- Техническая форма -->
+            <div class="qr-card rounded-xl p-6 text-center shadow-lg">
+                <div class="bg-gradient-to-br from-blue-100 to-blue-200 p-4 rounded-lg mb-4">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://artembibikov.github.io/arendata-feedback/tech" 
+                         alt="QR-код тех формы" 
+                         class="w-32 h-32 mx-auto">
+                </div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">
+                    <i class="fas fa-tools mr-2 text-blue-600"></i>Техническая форма
+                </h3>
+                <p class="text-sm text-gray-600 mb-3">Для разработчиков</p>
+                <div class="text-xs bg-blue-100 px-2 py-1 rounded text-blue-700">
+                    Техподдержка
+                </div>
+            </div>
+
+            <!-- Бизнес форма -->
+            <div class="qr-card rounded-xl p-6 text-center shadow-lg">
+                <div class="bg-gradient-to-br from-green-100 to-green-200 p-4 rounded-lg mb-4">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://artembibikov.github.io/arendata-feedback/business" 
+                         alt="QR-код бизнес формы" 
+                         class="w-32 h-32 mx-auto">
+                </div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">
+                    <i class="fas fa-briefcase mr-2 text-green-600"></i>Бизнес форма
+                </h3>
+                <p class="text-sm text-gray-600 mb-3">Для менеджеров</p>
+                <div class="text-xs bg-green-100 px-2 py-1 rounded text-green-700">
+                    Бизнес-вопросы
+                </div>
+            </div>
+
+            <!-- Форма руководителей -->
+            <div class="qr-card rounded-xl p-6 text-center shadow-lg">
+                <div class="bg-gradient-to-br from-purple-100 to-purple-200 p-4 rounded-lg mb-4">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://artembibikov.github.io/arendata-feedback/exec" 
+                         alt="QR-код формы руководителей" 
+                         class="w-32 h-32 mx-auto">
+                </div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">
+                    <i class="fas fa-user-tie mr-2 text-purple-600"></i>Руководители
+                </h3>
+                <p class="text-sm text-gray-600 mb-3">Для топ-менеджмента</p>
+                <div class="text-xs bg-purple-100 px-2 py-1 rounded text-purple-700">
+                    Стратегия
+                </div>
+            </div>
+        </div>
+
+        <!-- Информация -->
+        <div class="mt-8 text-center">
+            <div class="bg-white/90 backdrop-filter backdrop-blur-lg rounded-lg p-6 max-w-2xl mx-auto">
+                <h2 class="text-xl font-semibold text-gray-800 mb-3">
+                    <i class="fas fa-info-circle mr-2"></i>Как это работает
+                </h2>
+                <div class="text-left space-y-2 text-gray-600">
+                    <p><i class="fas fa-mobile-alt mr-2"></i>Откройте камеру на смартфоне</p>
+                    <p><i class="fas fa-qrcode mr-2"></i>Наведите на QR-код нужной формы</p>
+                    <p><i class="fas fa-link mr-2"></i>Перейдите по ссылке в браузере</p>
+                    <p><i class="fas fa-edit mr-2"></i>Заполните форму и отправьте</p>
+                </div>
+                <div class="mt-4 p-3 bg-green-50 rounded-lg">
+                    <p class="text-sm text-green-700">
+                        <i class="fas fa-globe mr-2"></i>
+                        <strong>Доступно онлайн:</strong> GitHub Pages обеспечивает глобальный доступ
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Футер -->
+        <div class="text-center mt-8 text-white/75">
+            <p class="text-sm">
+                <i class="fas fa-code mr-2"></i>
+                Arenadata Feedback System © 2025 | GitHub Pages
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Анимация появления карточек
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.qr-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 150);
+            });
+        });
+    </script>
+</body>
+</html>
