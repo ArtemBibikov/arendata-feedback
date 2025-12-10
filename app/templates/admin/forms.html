@@ -6,7 +6,7 @@
 <div class="bg-white rounded-lg shadow p-6 mb-6">
     <div class="flex justify-between items-center mb-4">
         <h3 class="text-lg font-semibold text-gray-900">Редактор форм</h3>
-        <button onclick="showAddForm()" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+        <button onclick="showAddFieldModal()" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
             <i class="fas fa-plus mr-2"></i>Добавить поле
         </button>
     </div>
@@ -420,21 +420,33 @@ function showAddForm() {
     const fieldType = prompt('Введите тип поля (text/email/textarea/select):', 'text');
     const required = confirm('Поле обязательное?');
     
-    // Создаем форму для отправки
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = '/admin/forms/add';
-    
-    form.innerHTML = `
-        <input type="hidden" name="form_type" value="${formType}">
-        <input type="hidden" name="field_name" value="${fieldName}">
-        <input type="hidden" name="field_label" value="${fieldLabel}">
-        <input type="hidden" name="field_type" value="${fieldType}">
-        <input type="hidden" name="required" value="${required}">
-    `;
-    
-    document.body.appendChild(form);
-    form.submit();
+    // Отправляем через AJAX
+    fetch('/admin/forms/add', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            form_type: formType,
+            field_name: fieldName,
+            field_label: fieldLabel,
+            field_type: fieldType,
+            required: required
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Form field saved successfully', 'success');
+            // Перезагружаем страницу чтобы показать новое поле
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showNotification('Error saving field: ' + (data.error || 'Unknown error'), 'error');
+        }
+    })
+    .catch(error => {
+        showNotification('Error saving field: ' + error.message, 'error');
+    });
 }
 
 // Функция удаления поля
@@ -487,6 +499,91 @@ function copyField(fieldId) {
     
     document.body.appendChild(form);
     form.submit();
+}
+
+// Модальное окно для добавления поля
+function showAddFieldModal() {
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    modal.innerHTML = `
+        <div class="bg-white rounded-lg p-6 w-96 max-w-full mx-4">
+            <h3 class="text-lg font-semibold mb-4">Добавить новое поле</h3>
+            <form id="addFieldForm" onsubmit="handleAddField(event)">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Тип формы</label>
+                    <select name="form_type" required class="w-full border border-gray-300 rounded-md px-3 py-2">
+                        <option value="">Выберите тип</option>
+                        <option value="tech">Техническая</option>
+                        <option value="business">Бизнес</option>
+                        <option value="exec">Руководители</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Имя поля (английский)</label>
+                    <input type="text" name="field_name" required class="w-full border border-gray-300 rounded-md px-3 py-2" placeholder="например: phone">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Название поля (русский)</label>
+                    <input type="text" name="field_label" required class="w-full border border-gray-300 rounded-md px-3 py-2" placeholder="например: Телефон">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Тип поля</label>
+                    <select name="field_type" required class="w-full border border-gray-300 rounded-md px-3 py-2">
+                        <option value="text">Текст</option>
+                        <option value="email">Email</option>
+                        <option value="textarea">Текстовая область</option>
+                        <option value="select">Выпадающий список</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="flex items-center">
+                        <input type="checkbox" name="required" class="mr-2">
+                        <span class="text-sm">Обязательное поле</span>
+                    </label>
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button type="button" onclick="closeAddFieldModal()" class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">
+                        Отмена
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                        Добавить
+                    </button>
+                </div>
+            </form>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function closeAddFieldModal() {
+    const modal = document.querySelector('.fixed.inset-0');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function handleAddField(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    fetch('/admin/forms/add', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Form field saved successfully', 'success');
+            closeAddFieldModal();
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showNotification('Error saving field: ' + (data.error || 'Unknown error'), 'error');
+        }
+    })
+    .catch(error => {
+        showNotification('Error saving field: ' + error.message, 'error');
+    });
 }
 
 </script>
