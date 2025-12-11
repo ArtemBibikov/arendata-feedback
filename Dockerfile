@@ -27,4 +27,4 @@ COPY ssl/ /app/ssl/
 EXPOSE 8000 8443
 
 # Запуск приложения
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--ssl-keyfile", "/app/ssl/key.pem", "--ssl-certfile", "/app/ssl/cert.pem"]
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port 8000 & uvicorn app.main:app --host 0.0.0.0 --port 8443 --ssl-keyfile /app/ssl/key.pem --ssl-certfile /app/ssl/cert.pem"]

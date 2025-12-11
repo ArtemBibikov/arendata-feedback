@@ -54,6 +54,7 @@ services:
     container_name: arenadata_api
     ports:
       - "8000:8000"
+      - "8443:8443"
     environment:
       DATABASE_URL: postgresql://postgres:postgres_password_123@postgres:5432/arenadata_feedback
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
