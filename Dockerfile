@@ -20,8 +20,11 @@ COPY . .
 # Создание файла .env
 RUN echo "DATABASE_URL=postgresql://arenadata_app:app_password_123@postgres:5432/arenadata_feedback" > .env
 
-# Открытие порта
-EXPOSE 8000
+# Копирование SSL сертификатов
+COPY ssl/ /app/ssl/
+
+# Открытие портов
+EXPOSE 8000 8443
 
 # Запуск приложения
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--ssl-keyfile", "/app/ssl/key.pem", "--ssl-certfile", "/app/ssl/cert.pem"]
