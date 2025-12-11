@@ -9,13 +9,40 @@
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
     <div class="max-w-2xl w-full bg-white rounded-lg shadow-lg p-8">
         <h1 class="text-3xl font-bold text-center mb-8">Бизнес форма</h1>
-        <form action="mailto:business@arenadata.com" method="post" enctype="text/plain" class="space-y-6">
-            <input type="text" name="Имя" placeholder="Ваше имя" required class="w-full p-3 border rounded">
-            <input type="email" name="Email" placeholder="Ваш email" required class="w-full p-3 border rounded">
-            <input type="text" name="Компания" placeholder="Компания" required class="w-full p-3 border rounded">
-            <textarea name="Запрос" placeholder="Описание бизнес запроса" required rows="5" class="w-full p-3 border rounded"></textarea>
+        <form id="businessForm" class="space-y-6">
+            <input type="text" name="client_name" placeholder="Ваше имя" required class="w-full p-3 border rounded">
+            <input type="email" name="client_email" placeholder="Ваш email" required class="w-full p-3 border rounded">
+            <input type="text" name="company" placeholder="Компания" required class="w-full p-3 border rounded">
+            <textarea name="problem_description" placeholder="Описание бизнес запроса" required rows="5" class="w-full p-3 border rounded"></textarea>
             <button type="submit" class="w-full bg-green-600 text-white p-3 rounded hover:bg-green-700">Отправить</button>
         </form>
     </div>
+    <script>
+        document.getElementById('businessForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData);
+            data.form_type = 'business';
+            
+            try {
+                const response = await fetch('http://51.38.54.50:8000/api/feedback', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    alert('Форма успешно отправлена!');
+                    this.reset();
+                } else {
+                    alert('Ошибка при отправке формы');
+                }
+            } catch (error) {
+                alert('Ошибка соединения: ' + error.message);
+            }
+        });
+    </script>
 </body>
 </html>
