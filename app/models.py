@@ -3,9 +3,10 @@ SQLAlchemy models for Arenadata Feedback System
 Модели данных соответствуют таблицам в PostgreSQL
 """
 
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, Text, ARRAY, DECIMAL
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey, DECIMAL, Float
+from sqlalchemy.dialects.postgresql import UUID, ARRAY, JSONB
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 import uuid
 
 from app.database import Base
@@ -46,7 +47,13 @@ class Feedback(Base):
     
     # Основные поля отзыва
     problem_text = Column(Text)
-    urgency = Column(String(20), default='normal', index=True)  # 'critical', 'high', 'medium', 'low', 'normal'
+    message = Column(Text)  # Основное сообщение клиента
+    
+    # Поля автоматического определения срочности
+    urgency = Column(String(20), default='normal', index=True)  # 'high', 'medium', 'low'
+    urgency_confidence = Column(Float, default=0.0)  # Уверенность в определении (0.0-1.0)
+    urgency_reason = Column(Text)  # Причина определения срочности
+    
     category = Column(String(50), index=True)
     tags = Column(ARRAY(String))
     

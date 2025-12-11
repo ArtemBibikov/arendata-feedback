@@ -43,9 +43,9 @@
                     <div class="flex justify-between">
                         <span class="text-gray-600">Срочность:</span>
                         <span class="px-2 py-1 text-xs rounded-full 
-                            {% if feedback.urgency == 'critical' %}bg-red-100 text-red-800
-                            {% elif feedback.urgency == 'high' %}bg-orange-100 text-orange-800
-                            {% elif feedback.urgency == 'medium' %}bg-yellow-100 text-yellow-800
+                            {% if feedback.urgency == 'high' %}bg-red-100 text-red-800
+                            {% elif feedback.urgency == 'medium' %}bg-orange-100 text-orange-800
+                            {% elif feedback.urgency == 'low' %}bg-green-100 text-green-800
                             {% else %}bg-gray-100 text-gray-800{% endif %}">
                             {{ feedback.urgency }}
                         </span>

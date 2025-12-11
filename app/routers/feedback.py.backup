@@ -1,0 +1,379 @@
+"""
+Feedback API router for Arenadata Feedback System
+Endpoints для работы с отзывами клиентов
+"""
+
+from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks, Request, UploadFile, File, Form
+from sqlalchemy.orm import Session
+
+from app.database import get_db
+from app.models import Feedback as FeedbackModel
+from app.crud import (
+    get_feedback, get_feedbacks, get_feedbacks_count, 
+    create_feedback, update_feedback, delete_feedback,
+    get_stats, get_recent_feedbacks
+)
+from app.schemas import Feedback
+# from app.crud import create_client
+from app.schemas import (
+    Feedback, FeedbackCreate, FeedbackUpdate, 
+    FeedbackListResponse, StatsResponse
+)
+from app.services.telegram import send_critical_notification
+from app.services.classifier import classify_feedback
+from app.services.email import send_confirmation_email, send_critical_team_email
+from app.services.file_service import file_service
+
+router = APIRouter()
+
+
+@router.post("/feedback", response_model=Feedback, summary="Создать отзыв")
+async def create_new_feedback(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+):
+    try:
+        # Получаем тело запроса как JSON для отладки
+        body = await request.body()
+        
+        # Пробуем распарсить
+        import json
+        data = json.loads(body.decode())
+        
+        # Валидируем через схему
+        feedback = FeedbackCreate(**data)
+        
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    """
+    Создать новый отзыв от клиента
+    
+    - **form_type**: Тип формы (tech, business, exec)
+    - **client_email**: Email клиента
+    - **problem_text**: Описание проблемы
+    - **urgency**: Срочность (high, medium, low, normal)
+    """
+    # Автоматическая классификация отзыва
+    classification = classify_feedback(feedback)
+    
+    # Обновляем данные отзыва классификацией
+    feedback_data = feedback.dict()
+    feedback_data.update(classification)
+    
+    try:
+        # Ищем или создаем клиента
+        client = None
+        # if feedback.client_email:
+        #     # client = get_client_by_email(db=db, email=feedback.client_email)
+            
+        #     # if not client:
+        #     #     # Создаем нового клиента
+        #     #     client_data = {
+        #     #         "client_id": feedback.client_email.split("@")[0],  # Простая генерация ID
+        #     #         "client_name": feedback.client_name or feedback.client_email.split("@")[0],
+        #     #         "client_email": feedback.client_email,
+        #     #         "client_type": "technical" if feedback.form_type == "tech" else "business" if feedback.form_type == "business" else "executive"
+        #     #     }
+        #     #     client = create_client(db=db, client=ClientCreate(**client_data))
+        #     # feedback_data["client_id"] = str(client.id)  # Преобразуем в строку
+        
+
+
+        else:
+            feedback_data["urgency"] = "low"
+
+            feedback_data["urgency"] = "high"
+        elif any(word in message_text for word in ["вопрос", "консультация", "помощь", "нужна", "подскажите", "как", "почему", "что", "где", "когда", "рекомендация", "предложение", "улучшение", "жалоба", "недовольство", "недостаток", "замечание", "требуется", "нужно"]):
+            feedback_data["urgency"] = "medium"
+
+        db_feedback = create_feedback(db=db, feedback=FeedbackCreate(**feedback_data))
+
+        # Отправка уведомлений в фоне
+        if db_feedback.urgency in ["high"]:
+            background_tasks.add_task(send_critical_notification, db_feedback)
+            background_tasks.add_task(send_critical_team_email, db_feedback)
+        
+        # Отправка email подтверждения клиенту (всегда)
+        if db_feedback.client_email:
+            background_tasks.add_task(send_confirmation_email, db_feedback)
+
+        return db_feedback
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+@router.get("/feedback", response_model=FeedbackListResponse, summary="Получить список отзывов")
+async def list_feedbacks(
+    skip: int = Query(0, ge=0, description="Пропустить N записей"),
+    limit: int = Query(100, ge=1, le=1000, description="Лимит записей"),
+    form_type: Optional[str] = Query(None, pattern="^(tech|business|exec)$"),
+    status: Optional[str] = Query(None, pattern="^(new|in_progress|resolved|rejected)$"),
+    urgency: Optional[str] = Query(None, pattern="^(high|medium|low|normal)$"),
+    client_email: Optional[str] = Query(None),
+    db: Session = Depends(get_db)
+):
+    """
+    Получить список отзывов с фильтрацией
+    
+    - **skip**: Количество записей для пропуска (пагинация)
+    - **limit**: Максимальное количество записей
+    - **form_type**: Фильтр по типу формы
+    - **status**: Фильтр по статусу
+    - **urgency**: Фильтр по срочности
+    - **client_email**: Фильтр по email клиента
+    """
+    feedbacks = get_feedbacks(
+        db=db, skip=skip, limit=limit,
+        form_type=form_type, status=status, urgency=urgency,
+        client_email=client_email
+    )
+    total = get_feedbacks_count(
+        db=db, form_type=form_type, status=status, urgency=urgency
+    )
+    
+    pages = (total + limit - 1) // limit  # Округление вверх
+    
+    return FeedbackListResponse(
+        items=feedbacks,
+        total=total,
+        page=skip // limit + 1,
+        size=limit,
+        pages=pages
+    )
+
+
+@router.get("/feedback/{feedback_id}", response_model=Feedback, summary="Получить отзыв по ID")
+async def read_feedback(feedback_id: int, db: Session = Depends(get_db)):
+    """Получить детали отзыва по его ID"""
+    feedback = get_feedback(db=db, feedback_id=feedback_id)
+    if feedback is None:
+        raise HTTPException(status_code=404, detail="Отзыв не найден")
+    return feedback
+
+
+@router.put("/feedback/{feedback_id}", response_model=Feedback, summary="Обновить отзыв")
+async def update_feedback_status(
+    feedback_id: int, 
+    feedback: FeedbackUpdate, 
+    db: Session = Depends(get_db)
+):
+    """
+    Обновить статус и другие поля отзыва
+    
+    - **status**: Новый статус (new, in_progress, resolved, rejected)
+    - **assigned_to**: Ответственный
+    - **satisfaction_score**: Оценка удовлетворенности (1-5)
+    """
+    updated_feedback = update_feedback(db=db, feedback_id=feedback_id, feedback=feedback)
+    if updated_feedback is None:
+        raise HTTPException(status_code=404, detail="Отзыв не найден")
+    return updated_feedback
+
+
+@router.delete("/feedback/{feedback_id}", summary="Удалить отзыв")
+async def delete_feedback_by_id(feedback_id: int, db: Session = Depends(get_db)):
+    """Удалить отзыв по ID"""
+    success = delete_feedback(db=db, feedback_id=feedback_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Отзыв не найден")
+    return {"message": "Отзыв успешно удален"}
+
+
+@router.get("/stats", response_model=StatsResponse, summary="Получить статистику")
+async def get_feedback_stats(
+    form_type: Optional[str] = Query(None, pattern="^(tech|business|exec)$"),
+    db: Session = Depends(get_db)
+):
+    """
+    Получить статистику по отзывам
+    
+    - **form_type**: Фильтр по типу формы (опционально)
+    
+    Возвращает:
+    - Общее количество отзывов
+    - Количество критических отзывов
+    - Количество решенных отзывов
+    - Среднее время ответа
+    - Среднюю оценку удовлетворенности
+    - Распределение по типам и статусам
+    """
+    stats = get_stats(db=db, form_type=form_type)
+    recent = get_recent_feedbacks(db=db, limit=5, form_type=form_type)
+    
+    return StatsResponse(
+        recent_feedbacks=recent,
+        **stats
+    )
+
+
+@router.post("/feedback/{feedback_id}/attachments", summary="Загрузить файлы к отзыву")
+async def upload_attachments(
+    feedback_id: int,
+    files: List[UploadFile] = File(...),
+    db: Session = Depends(get_db)
+):
+    """
+    Загрузить файлы к существующему отзыву
+    
+    - **feedback_id**: ID отзыва
+    - **files**: Список файлов для загрузки
+    """
+    # Проверяем существование отзыва
+    feedback = get_feedback(db=db, feedback_id=feedback_id)
+    if not feedback:
+        raise HTTPException(status_code=404, detail="Отзыв не найден")
+    
+    try:
+        attachments = await file_service.create_multiple_attachments(
+            db=db, feedback_id=feedback_id, files=files
+        )
+        
+        return {
+            "message": f"Успешно загружено {len(attachments)} файлов",
+            "attachments": attachments
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+@router.get("/feedback/{feedback_id}/attachments", summary="Получить файлы отзыва")
+async def get_feedback_attachments(
+    feedback_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Получить список файлов, прикрепленных к отзыву
+    
+    - **feedback_id**: ID отзыва
+    """
+    feedback = get_feedback(db=db, feedback_id=feedback_id)
+    if not feedback:
+        raise HTTPException(status_code=404, detail="Отзыв не найден")
+    
+    attachments = file_service.get_feedback_attachments(db=db, feedback_id=feedback_id)
+    return {"attachments": attachments}
+
+
+@router.delete("/attachments/{attachment_id}", summary="Удалить файл")
+async def delete_attachment(
+    attachment_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Удалить файл
+    
+    - **attachment_id**: ID файла
+    """
+    success = file_service.delete_attachment(db=db, attachment_id=attachment_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Файл не найден")
+    
+    return {"message": "Файл успешно удален"}
+
+
+@router.post("/feedback/with-files", response_model=Feedback, summary="Создать отзыв с файлами")
+async def create_feedback_with_files(
+    background_tasks: BackgroundTasks,
+    client_name: str = Form(...),
+    client_email: str = Form(...),
+    form_type: str = Form(...),
+    problem_text: str = Form(...),
+    request_type: Optional[str] = Form(None),
+    severity: Optional[str] = Form(None),
+    steps_to_reproduce: Optional[str] = Form(None),
+    environment: Optional[str] = Form(None),
+    error_logs: Optional[str] = Form(None),
+    expected_result: Optional[str] = Form(None),
+    suggestions: Optional[str] = Form(None),
+    files: List[UploadFile] = File(default=[]),
+    db: Session = Depends(get_db)
+):
+    """
+    Создать новый отзыв с файлами (multipart/form-data)
+    
+    - **client_name**: Имя клиента
+    - **client_email**: Email клиента
+    - **form_type**: Тип формы
+    - **problem_text**: Описание проблемы
+    - **files**: Файлы (опционально)
+    """
+    # Создаем объект отзыва
+    feedback_data = {
+        "client_name": client_name,
+        "client_email": client_email,
+        "form_type": form_type,
+        "problem_text": problem_text,
+        "form_data": {
+            "request_type": request_type,
+            "severity": severity,
+            "steps_to_reproduce": steps_to_reproduce,
+            "environment": environment,
+            "error_logs": error_logs,
+            "expected_result": expected_result,
+            "suggestions": suggestions
+        }
+    }
+    
+    # Автоматическая классификация отзыва
+    classification = classify_feedback(FeedbackCreate(**feedback_data))
+    feedback_data.update(classification)
+    
+    try:
+
+
+        else:
+            feedback_data["urgency"] = "low"
+
+            feedback_data["urgency"] = "high"
+        elif any(word in message_text for word in ["вопрос", "консультация", "помощь", "нужна", "подскажите", "как", "почему", "что", "где", "когда", "рекомендация", "предложение", "улучшение", "жалоба", "недовольство", "недостаток", "замечание", "требуется", "нужно"]):
+            feedback_data["urgency"] = "medium"
+
+        db_feedback = create_feedback(db=db, feedback=FeedbackCreate(**feedback_data))
+
+        # Загрузка файлов
+        if files:
+            await file_service.create_multiple_attachments(
+                db=db, feedback_id=db_feedback.id, files=files
+            )
+
+        # Отправка уведомлений в фоне
+        if db_feedback.urgency in ["high"]:
+            background_tasks.add_task(send_critical_notification, db_feedback)
+            background_tasks.add_task(send_critical_team_email, db_feedback)
+        
+        # Отправка email подтверждения клиенту (всегда)
+        if db_feedback.client_email:
+            background_tasks.add_task(send_confirmation_email, db_feedback)
+
+        return db_feedback
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+@router.get("/feedback/search", response_model=List[Feedback], summary="Поиск отзывов")
+async def search_feedbacks(
+    q: str = Query(..., min_length=2, description="Поисковый запрос"),
+    limit: int = Query(10, ge=1, le=50),
+    db: Session = Depends(get_db)
+):
+    """
+    Поиск отзывов по тексту
+    
+    - **q**: Поисковый запрос (минимум 2 символа)
+    - **limit**: Максимальное количество результатов
+    """
+    # TODO: Реализовать полнотекстовый поиск
+    # Пока простой поиск по problem_text
+    from sqlalchemy import or_
+    
+    feedbacks = db.query(FeedbackModel).filter(
+        or_(
+            FeedbackModel.problem_text.ilike(f"%{q}%"),
+            FeedbackModel.client_name.ilike(f"%{q}%"),
+            FeedbackModel.category.ilike(f"%{q}%")
+        )
+    ).limit(limit).all()
+    
+    return feedbacks

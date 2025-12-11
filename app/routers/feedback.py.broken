@@ -1,0 +1,22 @@
+from fastapi import APIRouter, Depends, BackgroundTasks, Request
+from sqlalchemy.orm import Session
+from app.database import get_db
+from app.models import Feedback as FeedbackModel
+from app.crud import (
+    get_feedback, get_feedbacks, get_feedbacks_count,
+    create_feedback, update_feedback, delete_feedback,
+    get_stats, get_recent_feedbacks
+)
+from app.schemas import Feedback
+from app.schemas import (
+    Feedback, FeedbackCreate, FeedbackUpdate,
+    FeedbackListResponse, StatsResponse
+)
+from app.services.telegram import send_critical_notification
+from app.services.classifier import classify_feedback
+from app.services.email import send_confirmation_email, send_critical_team_email
+from app.services.file_service import file_service
+
+router = APIRouter()
+
+@router.post(/feedback, response_model=Feedback, summary=Создать

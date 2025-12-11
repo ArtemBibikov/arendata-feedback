@@ -130,7 +130,7 @@ async def preview_form(form_type: str, db: Session = Depends(get_db)):
         if not config.is_active:
             continue
             
-        section_name = config.section_name or "Основная информация"
+        section_name = ""
         
         if section_name not in sections:
             sections[section_name] = []

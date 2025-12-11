@@ -80,14 +80,14 @@
         {% if recent_feedbacks %}
         <div class="space-y-4">
             {% for feedback in recent_feedbacks %}
-            <div class="border-l-4 {% if feedback.urgency == 'high' %}border-red-500{% elif feedback.urgency == 'medium' %}border-orange-500{% else %}border-gray-300{% endif %} pl-4">
+            <div class="border-l-4 {% if feedback.urgency == 'high' %}border-red-500{% elif feedback.urgency == 'medium' %}border-orange-500{% elif feedback.urgency == 'low' %}border-green-500{% else %}border-gray-300{% endif %} pl-4">
                 <div class="flex justify-between items-start">
                     <div>
                         <p class="font-medium">{{ feedback.client_name or 'Аноним' }}</p>
                         <p class="text-sm text-gray-600">{{ (feedback.problem_text or '')[:100] }}{% if feedback.problem_text and feedback.problem_text|length > 100 %}...{% endif %}</p>
                         <div class="flex items-center space-x-2 mt-1">
                             <span class="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded">{{ feedback.form_type }}</span>
-                            <span class="text-xs px-2 py-1 {% if feedback.urgency == 'high' %}bg-red-100 text-red-800{% elif feedback.urgency == 'medium' %}bg-orange-100 text-orange-800{% else %}bg-gray-100 text-gray-800{% endif %} rounded">{{ feedback.urgency }}</span>
+                            <span class="text-xs px-2 py-1 {% if feedback.urgency == 'high' %}bg-red-100 text-red-800{% elif feedback.urgency == 'medium' %}bg-orange-100 text-orange-800{% elif feedback.urgency == 'low' %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %} rounded">{{ feedback.urgency }}</span>
                             <span class="text-xs text-gray-500">{{ feedback.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
                         </div>
                     </div>

@@ -1,3 +1,5 @@
+from sqlalchemy import func
+from fastapi.responses import RedirectResponse
 """
 Admin Panel router for Arenadata Feedback System
 Полноценная админ-панель с управлением отзывами, клиентами, аналитикой
@@ -272,7 +274,7 @@ async def admin_feedbacks(
         }
     })
 
-@router.get("/admin/feedbacks/{feedback_id}", response_class=HTMLResponse)
+@router.get("/feedbacks/{feedback_id}", response_class=HTMLResponse)
 async def admin_feedback_detail(
     feedback_id: int,
     request: Request,
@@ -316,7 +318,7 @@ async def update_feedback_status(
     
     return {"success": True, "message": "Статус обновлен"}
 
-@router.get("/admin/forms", response_class=HTMLResponse)
+@router.get("/admin/form-editor", response_class=HTMLResponse)
 async def admin_forms(request: Request, db: Session = Depends(get_db)):
     if not check_auth(request):
         return RedirectResponse(url="/admin/login", status_code=302)
@@ -336,8 +338,7 @@ async def admin_forms(request: Request, db: Session = Depends(get_db)):
         "forms_info": forms_info
     })
 
-@router.post("/admin/forms/add")
-async def add_form_field(
+async def add_form_field(request: Request, 
     form_type: str = Form(...),
     section_name: str = Form(""),
     field_name: str = Form(...),
@@ -382,7 +383,6 @@ async def add_form_field(
         return {"success": False, "error": str(e)}
 
 
-@router.post("/admin/forms/{config_id}/toggle")
 async def toggle_form_field(
     config_id: int,
     is_active: bool = Form(...),
@@ -397,7 +397,6 @@ async def toggle_form_field(
     
     return {"message": f"field {config.field_name} {'activated' if is_active else 'deactivated'}"}
 
-@router.post("/admin/forms/reorder")
 async def reorder_form_fields(
     field_orders: str = Form(...),
     db: Session = Depends(get_db)
@@ -428,7 +427,6 @@ async def reorder_form_fields(
         print(f"Error reordering fields: {str(e)}")
         return {"success": False, "error": str(e)}
 
-@router.post("/admin/forms/{config_id}/delete")
 async def delete_form_field(
     config_id: int,
     db: Session = Depends(get_db)
@@ -442,7 +440,6 @@ async def delete_form_field(
     
     return {"success": True, "message": "field deleted"}
 
-@router.post("/admin/forms/{config_id}/update")
 async def update_form_field(
     config_id: int,
     field_label: str = Form(...),
@@ -764,3 +761,205 @@ async def admin_settings_post(
         },
         "success_message": success_message
     })
+
+
+@router.get("/admin", response_class=HTMLResponse, summary="Главная админка")
+async def admin_home(request: Request, db: Session = Depends(get_db)):
+    """Главная страница админки с редиректом на дашборд"""
+    return RedirectResponse(url="/admin/dashboard", status_code=302)
+
+@router.get("/test", response_class=HTMLResponse)
+async def test_route():
+    return "<h1>Test route works</h1>"
+
+
+@router.get("/admin/form-editor", response_class=HTMLResponse)
+async def form_editor(request: Request, db: Session = Depends(get_db)):
+    """Простой редактор форм"""
+    html_content = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Редактор форм</title>
+        <meta charset="utf-8">
+    </head>
+    <body>
+        <h1>Редактор форм работает!</h1>
+        <p>Здесь будет редактор форм</p>
+    </body>
+    </html>
+    """
+    return HTMLResponse(content=html_content)
+
+async def admin_forms(request: Request, db: Session = Depends(get_db)):
+    """Редактор форм"""
+    if not check_auth(request):
+        return RedirectResponse(url="/admin/login", status_code=302)
+    
+    tech_configs = get_all_form_configs(db=db, form_type="tech")
+    business_configs = get_all_form_configs(db=db, form_type="business")
+    exec_configs = get_all_form_configs(db=db, form_type="exec")
+    
+    forms_info = {
+        "tech": tech_configs,
+        "business": business_configs,
+        "exec": exec_configs
+    }
+    
+    return templates.TemplateResponse("admin/forms.html", {"request": request, "forms_info": forms_info})
+
+async def admin_forms_simple(request: Request, db: Session = Depends(get_db)):
+    """Простой редактор форм"""
+    return "<h1>Forms page works!</h1>"
+
+
+async def form_manager(request: Request):
+    """Менеджер форм"""
+    return "<h1>Form Manager Works!</h1>"
+
+
+async def admin_forms_final(request: Request):
+    """Финальный редактор форм"""
+    return "<h1>Forms Page Finally Works!</h1>"
+
+
+@router.get("/admin/forms", response_class=HTMLResponse)
+async def admin_forms(request: Request, db: Session = Depends(get_db)):
+    """Полный редактор форм"""
+    if not check_auth(request):
+        return RedirectResponse(url="/admin/login", status_code=302)
+    
+    try:
+        tech_configs = get_all_form_configs(db=db, form_type="tech")
+        business_configs = get_all_form_configs(db=db, form_type="business")
+        exec_configs = get_all_form_configs(db=db, form_type="exec")
+        
+        forms_info = {
+            "tech": tech_configs,
+            "business": business_configs,
+            "exec": exec_configs
+        }
+        
+        return templates.TemplateResponse("admin/forms.html", {"request": request, "forms_info": forms_info})
+    except Exception as e:
+        return f"<h1>Error loading forms: {str(e)}</h1>"
+
+@router.post("/admin/forms/add")
+async def add_form_field(request: Request, 
+    form_type: str = Form(...),
+    section_name: str = Form(""),
+    field_name: str = Form(...),
+    field_label: str = Form(...),
+    field_type: str = Form("text"),
+    required: bool = Form(False),
+    db: Session = Depends(get_db)
+):
+    """Добавить новое поле в форму"""
+    if not check_auth(request):
+        return {"success": False, "error": "Unauthorized"}
+    
+    try:
+        # Получаем максимальный порядок для текущей формы
+        max_order = db.query(func.max(FormConfig.field_order)).filter(
+            FormConfig.form_type == form_type
+        ).scalar() or 0
+        
+        new_field = FormConfig(
+            form_type=form_type,
+            section_name=section_name or "main",
+            field_name=field_name,
+            field_label=field_label,
+            field_type=field_type,
+            required=required,
+            is_active=True,
+            field_order=max_order + 1
+        )
+        
+        db.add(new_field)
+        db.commit()
+        db.refresh(new_field)
+        
+        return {"success": True, "message": "Field added successfully", "field_id": new_field.id}
+    except Exception as e:
+        db.rollback()
+        return {"success": False, "error": str(e)}
+
+@router.post("/admin/forms/{config_id}/update")
+async def update_form_field(
+    config_id: int,
+    request: Request,
+    field_label: str = Form(...),
+    required: bool = Form(False),
+    is_active: bool = Form(True),
+    db: Session = Depends(get_db)
+):
+    """Обновить поле формы"""
+    if not check_auth(request):
+        return {"success": False, "error": "Unauthorized"}
+    
+    try:
+        field = db.query(FormConfig).filter(FormConfig.id == config_id).first()
+        if not field:
+            return {"success": False, "error": "Field not found"}
+        
+        field.field_label = field_label
+        field.required = required
+        field.is_active = is_active
+        
+        db.commit()
+        
+        return {"success": True, "message": "Field updated successfully"}
+    except Exception as e:
+        db.rollback()
+        return {"success": False, "error": str(e)}
+
+@router.post("/admin/forms/{config_id}/delete")
+async def delete_form_field(
+    config_id: int,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Удалить поле формы"""
+    if not check_auth(request):
+        return {"success": False, "error": "Unauthorized"}
+    
+    try:
+        field = db.query(FormConfig).filter(FormConfig.id == config_id).first()
+        if not field:
+            return {"success": False, "error": "Field not found"}
+        
+        db.delete(field)
+        db.commit()
+        
+        return {"success": True, "message": "Field deleted successfully"}
+    except Exception as e:
+        db.rollback()
+        return {"success": False, "error": str(e)}
+
+@router.post("/admin/forms/reorder")
+async def reorder_form_fields(
+    request: Request,
+    field_orders: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    """Изменить порядок полей формы"""
+    if not check_auth(request):
+        return {"success": False, "error": "Unauthorized"}
+    
+    try:
+        # Парсим строку формата "id1:order1,id2:order2"
+        for pair in field_orders.split(","):
+            field_id, order = pair.split(":")
+            field_id = int(field_id)
+            order = int(order)
+            
+            field = db.query(FormConfig).filter(FormConfig.id == field_id).first()
+            if field:
+                field.field_order = order
+        
+        db.commit()
+        
+        return {"success": True, "message": "Field order updated successfully"}
+    except Exception as e:
+        db.rollback()
+        return {"success": False, "error": str(e)}
