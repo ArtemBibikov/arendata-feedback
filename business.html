@@ -23,6 +23,7 @@
             const formData = new FormData(this);
             const data = Object.fromEntries(formData);
             data.form_type = 'business';
+            console.log('Sending data:', data);
             
             try {
                 const response = await fetch('http://localhost:8000/api/feedback', {
