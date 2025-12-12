@@ -40,54 +40,60 @@
             <p class="text-lg text-white/75 mt-2">Демонстрация системы обратной связи</p>
         </div>
 
-        <!-- QR-коды -->
+        <!-- Прямые ссылки на формы -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <!-- Техническая форма -->
             <div class="qr-card rounded-xl p-6 text-center shadow-lg">
                 <div class="bg-gradient-to-br from-blue-100 to-blue-200 p-4 rounded-lg mb-4">
-                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://artembibikov.github.io/arendata-feedback/tech" 
-                         alt="QR-код тех формы" 
-                         class="w-56 h-56 mx-auto">
+                    <a href="http://localhost:8000/tech" class="block">
+                        <div class="w-56 h-56 mx-auto flex items-center justify-center">
+                            <i class="fas fa-tools text-6xl text-blue-600"></i>
+                        </div>
+                    </a>
                 </div>
                 <h3 class="text-lg font-semibold text-gray-800 mb-2">
                     <i class="fas fa-tools mr-2 text-blue-600"></i>Техническая форма
                 </h3>
                 <p class="text-sm text-gray-600 mb-3">Для разработчиков</p>
-                <div class="text-xs bg-blue-100 px-2 py-1 rounded text-blue-700">
-                    Техподдержка
-                </div>
+                <a href="http://localhost:8000/tech" class="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                    Открыть форму
+                </a>
             </div>
 
             <!-- Бизнес форма -->
             <div class="qr-card rounded-xl p-6 text-center shadow-lg">
                 <div class="bg-gradient-to-br from-green-100 to-green-200 p-4 rounded-lg mb-4">
-                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://artembibikov.github.io/arendata-feedback/business" 
-                         alt="QR-код бизнес формы" 
-                         class="w-56 h-56 mx-auto">
+                    <a href="http://localhost:8000/business" class="block">
+                        <div class="w-56 h-56 mx-auto flex items-center justify-center">
+                            <i class="fas fa-briefcase text-6xl text-green-600"></i>
+                        </div>
+                    </a>
                 </div>
                 <h3 class="text-lg font-semibold text-gray-800 mb-2">
                     <i class="fas fa-briefcase mr-2 text-green-600"></i>Бизнес форма
                 </h3>
                 <p class="text-sm text-gray-600 mb-3">Для менеджеров</p>
-                <div class="text-xs bg-green-100 px-2 py-1 rounded text-green-700">
-                    Бизнес-вопросы
-                </div>
+                <a href="http://localhost:8000/business" class="inline-block bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                    Открыть форму
+                </a>
             </div>
 
             <!-- Форма руководителей -->
             <div class="qr-card rounded-xl p-6 text-center shadow-lg">
                 <div class="bg-gradient-to-br from-purple-100 to-purple-200 p-4 rounded-lg mb-4">
-                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://artembibikov.github.io/arendata-feedback/exec" 
-                         alt="QR-код формы руководителей" 
-                         class="w-56 h-56 mx-auto">
+                    <a href="http://localhost:8000/exec" class="block">
+                        <div class="w-56 h-56 mx-auto flex items-center justify-center">
+                            <i class="fas fa-user-tie text-6xl text-purple-600"></i>
+                        </div>
+                    </a>
                 </div>
                 <h3 class="text-lg font-semibold text-gray-800 mb-2">
                     <i class="fas fa-user-tie mr-2 text-purple-600"></i>Руководители
                 </h3>
                 <p class="text-sm text-gray-600 mb-3">Для топ-менеджмента</p>
-                <div class="text-xs bg-purple-100 px-2 py-1 rounded text-purple-700">
-                    Стратегия
-                </div>
+                <a href="http://localhost:8000/exec" class="inline-block bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
+                    Открыть форму
+                </a>
             </div>
         </div>
 
