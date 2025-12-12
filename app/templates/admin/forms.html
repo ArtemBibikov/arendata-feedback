@@ -364,6 +364,11 @@ function makeDraggable() {
                 this.parentNode.insertBefore(draggedElement, afterElement);
             }
         });
+        
+        container.addEventListener("drop", function(e) {
+            e.preventDefault();
+            saveFieldOrder(this.parentNode);
+        });
     });
 }
 
@@ -380,6 +385,37 @@ function getDragAfterElement(container, y) {
             return closest;
         }
     }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+// Сохранение порядка полей
+function saveFieldOrder(container) {
+    const fields = container.querySelectorAll(".field-container");
+    const fieldOrders = [];
+    
+    fields.forEach((field, index) => {
+        const fieldId = field.getAttribute('data-field-id');
+        fieldOrders.push(`${fieldId}:${index}`);
+    });
+    
+    const fieldOrdersString = fieldOrders.join(',');
+    
+    fetch('/admin/forms/reorder', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `field_orders=${fieldOrdersString}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (!data.success) {
+            console.error('Ошибка сохранения порядка:', data.error);
+            // Можно показать уведомление пользователю
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка сети:', error);
+    });
 }
 
 // Инициализация при загрузке страницы
