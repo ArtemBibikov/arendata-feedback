@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo QR Codes - Arenadata Feedback System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gradient-to-br from-blue-900 via-purple-900 to-pink-900 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Заголовок -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-white mb-4">
+                <i class="fas fa-qrcode mr-3"></i>Arenadata Feedback System
+            </h1>
+            <p class="text-xl text-white/90">Сканируйте QR-код для доступа к форме обратной связи</p>
+            <p class="text-lg text-white/75 mt-2">Демонстрация системы для презентации</p>
+        </div>
+
+        <!-- QR-коды -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            <!-- Техническая форма -->
+            <div class="bg-white/10 backdrop-blur-md rounded-xl p-6 text-center shadow-xl border border-white/20">
+                <div class="bg-gradient-to-br from-blue-100 to-blue-200 p-4 rounded-lg mb-4">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://sweet-seals-brake.loca.lt/form/tech" 
+                         alt="QR-код тех формы" 
+                         class="w-56 h-56 mx-auto border-4 border-white rounded-lg shadow-lg">
+                </div>
+                <h3 class="text-xl font-semibold text-white mb-2">
+                    <i class="fas fa-tools mr-2 text-blue-400"></i>Техническая форма
+                </h3>
+                <p class="text-sm text-white/80 mb-3">Для разработчиков и IT-специалистов</p>
+                <div class="text-xs bg-blue-500/20 px-3 py-1 rounded-full text-blue-300 border border-blue-400/30">
+                    <i class="fas fa-code mr-1"></i>Техподдержка
+                </div>
+            </div>
+
+            <!-- Бизнес форма -->
+            <div class="bg-white/10 backdrop-blur-md rounded-xl p-6 text-center shadow-xl border border-white/20">
+                <div class="bg-gradient-to-br from-green-100 to-green-200 p-4 rounded-lg mb-4">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://sweet-seals-brake.loca.lt/form/business" 
+                         alt="QR-код бизнес формы" 
+                         class="w-56 h-56 mx-auto border-4 border-white rounded-lg shadow-lg">
+                </div>
+                <h3 class="text-xl font-semibold text-white mb-2">
+                    <i class="fas fa-briefcase mr-2 text-green-400"></i>Бизнес форма
+                </h3>
+                <p class="text-sm text-white/80 mb-3">Для менеджеров и бизнес-пользователей</p>
+                <div class="text-xs bg-green-500/20 px-3 py-1 rounded-full text-green-300 border border-green-400/30">
+                    <i class="fas fa-chart-line mr-1"></i>Бизнес-вопросы
+                </div>
+            </div>
+
+            <!-- Форма руководителей -->
+            <div class="bg-white/10 backdrop-blur-md rounded-xl p-6 text-center shadow-xl border border-white/20">
+                <div class="bg-gradient-to-br from-purple-100 to-purple-200 p-4 rounded-lg mb-4">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://sweet-seals-brake.loca.lt/form/exec" 
+                         alt="QR-код формы руководителей" 
+                         class="w-56 h-56 mx-auto border-4 border-white rounded-lg shadow-lg">
+                </div>
+                <h3 class="text-xl font-semibold text-white mb-2">
+                    <i class="fas fa-user-tie mr-2 text-purple-400"></i>Руководители
+                </h3>
+                <p class="text-sm text-white/80 mb-3">Для топ-менеджмента и руководителей</p>
+                <div class="text-xs bg-purple-500/20 px-3 py-1 rounded-full text-purple-300 border border-purple-400/30">
+                    <i class="fas fa-crown mr-1"></i>Стратегия
+                </div>
+            </div>
+        </div>
+
+        <!-- Инструкция -->
+        <div class="mt-12 text-center">
+            <div class="bg-white/10 backdrop-blur-md rounded-xl p-6 max-w-2xl mx-auto border border-white/20">
+                <h2 class="text-2xl font-bold text-white mb-4">
+                    <i class="fas fa-info-circle mr-2"></i>Как это работает
+                </h2>
+                <div class="text-left text-white/90 space-y-3">
+                    <div class="flex items-start">
+                        <i class="fas fa-mobile-alt mt-1 mr-3 text-blue-400"></i>
+                        <p>Отсканируйте QR-код камерой смартфона</p>
+                    </div>
+                    <div class="flex items-start">
+                        <i class="fas fa-edit mt-1 mr-3 text-green-400"></i>
+                        <p>Заполните форму обратной связи</p>
+                    </div>
+                    <div class="flex items-start">
+                        <i class="fas fa-paper-plane mt-1 mr-3 text-purple-400"></i>
+                        <p>Отправьте данные - они появятся в админ-панели</p>
+                    </div>
+                    <div class="flex items-start">
+                        <i class="fas fa-chart-bar mt-1 mr-3 text-yellow-400"></i>
+                        <p>Админ-панель: <a href="http://localhost:8000/admin" class="text-blue-300 hover:text-blue-200 underline">localhost:8000/admin</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Футер -->
+        <div class="text-center mt-8 text-white/75">
+            <p class="text-sm">
+                <i class="fas fa-code mr-2"></i>
+                Arenadata Feedback System © 2025 | Demo Version
+            </p>
+        </div>
+    </div>
+</body>
+</html>
